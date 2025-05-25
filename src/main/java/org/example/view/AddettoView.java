@@ -85,7 +85,7 @@ public class AddettoView {
         int choice = 0;
         try {
             Scanner input = new Scanner(System.in);
-            System.out.print("Quanti" + stringa + " vuoi aggiungere? : ");
+            System.out.print(stringa + " vuoi aggiungere? : ");
             choice = input.nextInt();
         }catch (IllegalArgumentException e){
             System.out.println("INSERISCI UN NUMERO");

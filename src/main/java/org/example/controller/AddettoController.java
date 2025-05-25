@@ -4,6 +4,7 @@ import jdk.jshell.execution.StreamingExecutionControl;
 import org.example.exception.DAOException;
 import org.example.model.dao.AggiornaBadgeUtenteDAO;
 import org.example.model.dao.ConnectionFactory;
+import org.example.model.dao.NuovoContattoUtenteDAO;
 import org.example.model.dao.RegistraNuovoUtenteDAO;
 import org.example.model.domain.*;
 import org.example.view.AddettoView;
@@ -95,7 +96,19 @@ public class AddettoController implements Controller {
             System.out.println(e.getMessage());
         }
     }
-    void AggiornaContattiUtente() {}
+    void AggiornaContattiUtente() {
+        Utilizzatore utilizzatore = new Utilizzatore();
+        utilizzatore.setCF(AddettoView.getCodiceFiscale());
+        utilizzatore.addCellulare(AddettoView.GetCellulare());
+        utilizzatore.addTelefono(AddettoView.GetTelefono());
+        utilizzatore.addEmail(AddettoView.GetEmail());
+        NuovoContattoUtenteDAO dao = new NuovoContattoUtenteDAO();
+        try {
+            dao.execute(utilizzatore);
+        } catch (DAOException | SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
     void NuovaIscrizioneUtente() {}
     void AggiungiCorso() {}
     void AggiungiAppuntamento() {}
