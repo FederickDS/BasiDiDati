@@ -104,7 +104,7 @@ public class AddettoController implements Controller {
         utilizzatore.addEmail(AddettoView.GetEmail());
         NuovoContattoUtenteDAO dao = new NuovoContattoUtenteDAO();
         try {
-            dao.execute(utilizzatore);
+            System.out.println(dao.execute(utilizzatore));
         } catch (DAOException | SQLException e) {
             System.out.println(e.getMessage());
         }
