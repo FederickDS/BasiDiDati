@@ -7,6 +7,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema mydb
 -- -----------------------------------------------------
+DROP SCHEMA IF EXISTS `mydb` ;
 
 -- -----------------------------------------------------
 -- Schema mydb
@@ -17,6 +18,8 @@ USE `mydb` ;
 -- -----------------------------------------------------
 -- Table `mydb`.`Vasca`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Vasca` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Vasca` (
   `nome` VARCHAR(10) NOT NULL,
   PRIMARY KEY (`nome`))
@@ -26,8 +29,10 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Corso`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Corso` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Corso` (
-  `CorsoID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `CorsoID` INT UNSIGNED NOT NULL,
   `minimo` INT UNSIGNED NOT NULL,
   `stato` ENUM('C', 'P', 'A') NOT NULL,
   `nome` VARCHAR(45) NOT NULL,
@@ -43,8 +48,10 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Appuntamento`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Appuntamento` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Appuntamento` (
-  `Corso` INT NOT NULL,
+  `Corso` INT UNSIGNED NOT NULL,
   `inizio` TIMESTAMP NOT NULL,
   `fine` TIMESTAMP NOT NULL,
   `Vasca` VARCHAR(10) NOT NULL,
@@ -67,8 +74,10 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Badge`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Badge` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Badge` (
-  `BadgeID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `BadgeID` INT UNSIGNED NOT NULL,
   `stato` ENUM('A', 'D') NOT NULL,
   PRIMARY KEY (`BadgeID`))
 ENGINE = InnoDB;
@@ -77,6 +86,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Accesso`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Accesso` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Accesso` (
   `istante` TIMESTAMP NOT NULL,
   `Badge` INT UNSIGNED NOT NULL,
@@ -94,6 +105,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Utilizzatore`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Utilizzatore` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Utilizzatore` (
   `CF` CHAR(16) NOT NULL,
   `indirizzo` VARCHAR(60) NOT NULL,
@@ -105,6 +118,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Utente`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Utente` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Utente` (
   `Utilizzatore` CHAR(16) NOT NULL,
   `Badge` INT UNSIGNED NOT NULL,
@@ -128,6 +143,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Addetto`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Addetto` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Addetto` (
   `Utilizzatore` CHAR(16) NOT NULL,
   `username` VARCHAR(30) NOT NULL,
@@ -145,6 +162,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Iscrizione`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Iscrizione` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Iscrizione` (
   `Corso` INT UNSIGNED NOT NULL,
   `Utente` CHAR(16) NOT NULL,
@@ -166,9 +185,11 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`Badge_Storico`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Badge_Storico` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`Badge_Storico` (
   `Utente` CHAR(16) NOT NULL,
-  `Badge` INT NOT NULL,
+  `Badge` INT UNSIGNED NOT NULL,
   `inizio` TIMESTAMP NOT NULL,
   `fine` TIMESTAMP NOT NULL,
   PRIMARY KEY (`Utente`, `Badge`),
@@ -189,6 +210,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`cellulare`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`cellulare` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`cellulare` (
   `cellulare` CHAR(10) NOT NULL,
   `Utilizzatore` CHAR(16) NOT NULL,
@@ -205,6 +228,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`telefono`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`telefono` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`telefono` (
   `telefono` CHAR(10) NOT NULL,
   `Utilizzatore` CHAR(16) NOT NULL,
@@ -221,6 +246,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `mydb`.`email`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`email` ;
+
 CREATE TABLE IF NOT EXISTS `mydb`.`email` (
   `email` VARCHAR(40) NOT NULL,
   `Utilizzatore` CHAR(16) NOT NULL,
@@ -238,6 +265,9 @@ USE `mydb` ;
 -- -----------------------------------------------------
 -- procedure login
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`login`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -268,6 +298,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure nuovoUtente
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`nuovoUtente`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -331,16 +364,20 @@ END;$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure updateContattiUtente
+-- procedure updateContattiUtilizzatore
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`updateContattiUtilizzatore`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE updateContattiUtente(
-  IN p_CF         CHAR(16),
-  IN p_email      VARCHAR(40)  ,
-  IN p_telefono   CHAR(10)     ,
-  IN p_cellulare  CHAR(10)     
+CREATE PROCEDURE updateContattiUtilizzatore(
+  IN p_CF          CHAR(16),
+  IN p_email       VARCHAR(40),
+  IN p_telefono    CHAR(10),
+  IN p_cellulare   CHAR(10),
+  IN p_operazione  INT
 )
 BEGIN
   START TRANSACTION;
@@ -351,41 +388,52 @@ BEGIN
       SET MESSAGE_TEXT = 'Utilizzatore non trovato: impossibile aggiornare i contatti';
   END IF;
 
-  -- 2.1) Email
-  IF p_email IS NOT NULL THEN
-    DELETE FROM email WHERE Utilizzatore = p_CF;
-    IF p_email <> '' THEN
+  -- Email
+  IF p_email IS NOT NULL AND p_email <> '' THEN
+    IF p_operazione = 1 THEN
+      -- Aggiungi un nuovo valore
       INSERT INTO email(email, Utilizzatore)
         VALUES(p_email, p_CF);
+    ELSEIF p_operazione = 2 THEN
+      -- Rimuovi solo il valore specifico (non tutti)
+      DELETE FROM email
+      WHERE Utilizzatore = p_CF AND email = p_email;
     END IF;
   END IF;
 
-  -- 2.2) Telefono
-  IF p_telefono IS NOT NULL THEN
-    DELETE FROM telefono WHERE Utilizzatore = p_CF;
-    IF p_telefono <> '' THEN
+  -- Telefono
+  IF p_telefono IS NOT NULL AND p_telefono <> '' THEN
+    IF p_operazione = 1 THEN
       INSERT INTO telefono(telefono, Utilizzatore)
         VALUES(p_telefono, p_CF);
+    ELSEIF p_operazione = 2 THEN
+      DELETE FROM telefono
+      WHERE Utilizzatore = p_CF AND telefono = p_telefono;
     END IF;
   END IF;
 
-  -- 2.3) Cellulare
-  IF p_cellulare IS NOT NULL THEN
-    DELETE FROM cellulare WHERE Utilizzatore = p_CF;
-    IF p_cellulare <> '' THEN
+  -- Cellulare
+  IF p_cellulare IS NOT NULL AND p_cellulare <> '' THEN
+    IF p_operazione = 1 THEN
       INSERT INTO cellulare(cellulare, Utilizzatore)
         VALUES(p_cellulare, p_CF);
+    ELSEIF p_operazione = 2 THEN
+      DELETE FROM cellulare
+      WHERE Utilizzatore = p_CF AND cellulare = p_cellulare;
     END IF;
   END IF;
 
   COMMIT;
-END$$
+END;$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
 -- procedure updateBadgeUtente
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`updateBadgeUtente`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -457,6 +505,9 @@ DELIMITER ;
 -- procedure iscriviUtenteACorso
 -- -----------------------------------------------------
 
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`iscriviUtenteACorso`;
+
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE iscriviUtenteACorso(
@@ -475,7 +526,7 @@ BEGIN
   START TRANSACTION;
 
   -- 1) Controlla che l'utente esista
-  SELECT COUNT(*) 
+  SELECT COUNT(*)
     INTO v_existsUtente
     FROM Utente
    WHERE Utilizzatore = p_CF;
@@ -486,11 +537,11 @@ BEGIN
   END IF;
 
   -- 2) Controlla che il corso esista e ne ricava stato, capienza e iscritti
-  SELECT COUNT(*)>0,
-         stato,
-         num_iscritti,
-         capienza,
-         data_fine
+  SELECT COUNT(*) > 0,
+         MAX(stato),
+         MAX(num_iscritti),
+         MAX(capienza),
+         MAX(data_fine)
     INTO v_existsCorso,
          v_statoCorso,
          v_numIscritti,
@@ -499,6 +550,7 @@ BEGIN
     FROM Corso
    WHERE CorsoID = p_Corso
    FOR UPDATE;
+
   IF v_existsCorso = 0 THEN
     ROLLBACK;
     SIGNAL SQLSTATE '45000'
@@ -553,6 +605,9 @@ DELIMITER ;
 -- procedure checkAppuntamentiPerBadge
 -- -----------------------------------------------------
 
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`checkAppuntamentiPerBadge`;
+
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE checkAppuntamentiPerBadge(
@@ -594,6 +649,9 @@ DELIMITER ;
 -- procedure InsertNuovoAccesso
 -- -----------------------------------------------------
 
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`InsertNuovoAccesso`;
+
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE InsertNuovoAccesso (
@@ -610,6 +668,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure InserisciCorso
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`InserisciCorso`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -639,6 +700,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure ModificaCorso
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`ModificaCorso`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -673,6 +737,9 @@ DELIMITER ;
 -- procedure AnnullaCorso
 -- -----------------------------------------------------
 
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`AnnullaCorso`;
+
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE AnnullaCorso (
@@ -689,6 +756,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure InserisciAppuntamento
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`InserisciAppuntamento`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -714,6 +784,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure ModificaAppuntamento
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`ModificaAppuntamento`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -748,6 +821,9 @@ DELIMITER ;
 -- procedure RimuoviAppuntamento
 -- -----------------------------------------------------
 
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`RimuoviAppuntamento`;
+
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE RimuoviAppuntamento (
@@ -765,6 +841,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure InserisciAddetto
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`InserisciAddetto`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -797,6 +876,9 @@ DELIMITER ;
 -- procedure ModificaPasswordAddetto
 -- -----------------------------------------------------
 
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`ModificaPasswordAddetto`;
+
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE ModificaPasswordAddetto (
@@ -814,6 +896,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure RimuoviAddetto
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`RimuoviAddetto`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -841,6 +926,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure ReportAccessi
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`ReportAccessi`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -874,6 +962,9 @@ DELIMITER ;
 -- procedure VisualizzaIscrittiCorso
 -- -----------------------------------------------------
 
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`VisualizzaIscrittiCorso`;
+
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE VisualizzaIscrittiCorso (
@@ -894,6 +985,9 @@ DELIMITER ;
 -- -----------------------------------------------------
 -- procedure VisualizzaCorsiUtente
 -- -----------------------------------------------------
+
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`VisualizzaCorsiUtente`;
 
 DELIMITER $$
 USE `mydb`$$
@@ -916,6 +1010,9 @@ DELIMITER ;
 -- procedure VisualizzaAppuntamentiCorso
 -- -----------------------------------------------------
 
+USE `mydb`;
+DROP procedure IF EXISTS `mydb`.`VisualizzaAppuntamentiCorso`;
+
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE VisualizzaAppuntamentiCorso (
@@ -935,6 +1032,9 @@ DELIMITER ;
 USE `mydb`;
 
 DELIMITER $$
+
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Corso_BEFORE_INSERT` $$
 USE `mydb`$$
 CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Corso_BEFORE_INSERT` BEFORE INSERT ON `Corso` FOR EACH ROW
 BEGIN
@@ -950,6 +1050,9 @@ BEGIN
     END IF;
 END$$
 
+
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Corso_BEFORE_UPDATE` $$
 USE `mydb`$$
 CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Corso_BEFORE_UPDATE` BEFORE UPDATE ON `Corso` FOR EACH ROW
 BEGIN

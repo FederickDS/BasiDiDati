@@ -157,5 +157,11 @@ public class AddettoView {
         return sceltaOperazione;
     }
 
+    public static void print(String stringa) {
+        System.out.println(stringa);
+    }
+
+
+
 
 }

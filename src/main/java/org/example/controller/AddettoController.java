@@ -2,10 +2,7 @@ package org.example.controller;
 
 import jdk.jshell.execution.StreamingExecutionControl;
 import org.example.exception.DAOException;
-import org.example.model.dao.AggiornaBadgeUtenteDAO;
-import org.example.model.dao.ConnectionFactory;
-import org.example.model.dao.NuovoContattoUtenteDAO;
-import org.example.model.dao.RegistraNuovoUtenteDAO;
+import org.example.model.dao.*;
 import org.example.model.domain.*;
 import org.example.view.AddettoView;
 import org.example.view.UtenteView;
@@ -113,7 +110,19 @@ public class AddettoController implements Controller {
             System.out.println(e.getMessage());
         }
     }
-    void NuovaIscrizioneUtente() {}
+    void NuovaIscrizioneUtente() {
+        NuovaIscrizioneUtenteDAO dao = new NuovaIscrizioneUtenteDAO();
+        Corso corso = new Corso();
+        corso.setCorsoID(AddettoView.getCodiceCorso());
+        AddettoView.print("Costo corso: " + dao.showCostoCorso(corso.getCorsoID()));
+        Utilizzatore utilizzatore = new Utilizzatore();
+        utilizzatore.setCF(AddettoView.getCodiceFiscale());
+        try {
+            AddettoView.print(dao.execute(utilizzatore, corso));
+        } catch (DAOException|SQLException e) {
+            AddettoView.print("Inserimento fallito: errore nel database" + e.getMessage());
+        }
+    }
     void AggiungiCorso() {}
     void AggiungiAppuntamento() {}
     void AggiungiAddetto() {}
