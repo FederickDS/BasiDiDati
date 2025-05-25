@@ -97,6 +97,10 @@ public class AddettoController implements Controller {
         }
     }
     void AggiornaContattiUtente() {
+        int choice = 0;
+        while(choice != 1 && choice != 2) {
+            choice = AddettoView.getSceltaOperazione("( 1 Inserisci contatto - 2 Elimina contatto )");
+        }
         Utilizzatore utilizzatore = new Utilizzatore();
         utilizzatore.setCF(AddettoView.getCodiceFiscale());
         utilizzatore.addCellulare(AddettoView.GetCellulare());
@@ -104,7 +108,7 @@ public class AddettoController implements Controller {
         utilizzatore.addEmail(AddettoView.GetEmail());
         NuovoContattoUtenteDAO dao = new NuovoContattoUtenteDAO();
         try {
-            System.out.println(dao.execute(utilizzatore));
+            System.out.println(dao.execute(utilizzatore,choice));
         } catch (DAOException | SQLException e) {
             System.out.println(e.getMessage());
         }

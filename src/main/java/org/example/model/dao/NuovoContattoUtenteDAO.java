@@ -15,8 +15,9 @@ import java.util.ArrayList;
 public class NuovoContattoUtenteDAO implements GenericProcedureDAO{
     @Override
     public Object execute(Object... params) throws DAOException, SQLException {
+        Utilizzatore util = (Utilizzatore) params[0];
+        int choice = (int) params[1];
         try{
-            Utilizzatore util = (Utilizzatore) params[0];
             ArrayList<Email> emails   = util.getEmails();
             ArrayList<Telefono> telefoni = util.getTelefoni();
             ArrayList<Cellulare> cellulari = util.getCellulari();
@@ -27,7 +28,7 @@ public class NuovoContattoUtenteDAO implements GenericProcedureDAO{
             Cellulare cellulare = cellulari.getFirst();
 
             Connection conn = ConnectionFactory.getConnection();
-            CallableStatement cs = conn.prepareCall("{ call updateContattiUtilizzatore(?, ?, ?, ?) }");
+            CallableStatement cs = conn.prepareCall("{ call updateContattiUtilizzatore(?, ?, ?, ?, ?) }");
 
             cs.setString(1,util.getCF());
 
@@ -52,11 +53,17 @@ public class NuovoContattoUtenteDAO implements GenericProcedureDAO{
                 cs.setNull(4, Types.CHAR);
             }
 
+            cs.setInt(5, choice);
+
             cs.execute();
+            if(choice==1){
+                return "\nNuovi contatti inseriti!\n";
+            }else if(choice==2){
+                return "\nVecchi contatti eliminati!\n";
+            }
         } catch (SQLException e) {
             throw new DAOException("Errore nell'inserimento: " + e.getMessage());
         }
-        return "\nNuovi Contatti inseriti!\n";
-
+        return "\nErrore: operazione eseguita non chiara, codice " +  choice + "\n";
     }
 }

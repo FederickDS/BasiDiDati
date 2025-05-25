@@ -145,5 +145,17 @@ public class AddettoView {
         return codiceCorso;
     }
 
+    public static int getSceltaOperazione(String stringa) {
+        Scanner input = new Scanner(System.in);
+        int sceltaOperazione = 0;
+        try{
+            System.out.print("Inserisci la scelta " + stringa + " : ");
+            sceltaOperazione = input.nextInt();
+        }catch (IllegalArgumentException e){
+            System.out.println("Devi inserire il numero dell'operazione scelta");
+        }
+        return sceltaOperazione;
+    }
+
 
 }
