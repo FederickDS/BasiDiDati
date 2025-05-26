@@ -369,4 +369,11 @@ public class AddettoView {
             System.out.println(i);
         }
     }
+
+    public static void printCorsi(List<Corso> corsi) {
+        for (Corso i : corsi) {
+            System.out.println(i);
+        }
+    }
+
 }

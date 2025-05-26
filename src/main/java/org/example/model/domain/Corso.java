@@ -56,4 +56,10 @@ public class Corso {
 
     public Integer getCapienza() { return capienza; }
     public void setCapienza(Integer capienza) { this.capienza = capienza; }
+
+    @Override
+    public String toString() {
+        return this.corsoID + " – " + this.nome;
+    }
+
 }

@@ -27,6 +27,6 @@ public class IscrittoCorso {
 
     @Override
     public String toString() {
-        return cf + " – " + nome;
+        return this.cf + " – " + this.nome;
     }
 }

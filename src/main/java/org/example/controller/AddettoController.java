@@ -243,13 +243,20 @@ public class AddettoController implements Controller {
             List<IscrittoCorso> lista = dao.execute(corso);
             AddettoView.printUtenti(lista);
         } catch (DAOException e) {
-            throw new RuntimeException(e);
+            AddettoView.print(e.getMessage());
         }
     }
     void VisualizzaCorsiDiUnUtente() {
         //1) ottieni codice fiscale di un utente
         String CF = AddettoView.getCodiceFiscale();
         //2)tramite dao ottieni tutti i corsi a cui è iscritto
+        VisualizzaCorsiUtenteDAO dao = new VisualizzaCorsiUtenteDAO();
+        try{
+            List<Corso> lista = dao.execute(CF);
+            AddettoView.printCorsi(lista);
+        } catch (DAOException e) {
+            AddettoView.print(e.getMessage());
+        }
     }
     void VisualizzaAppuntamentiDiUnCorso() {}
 
