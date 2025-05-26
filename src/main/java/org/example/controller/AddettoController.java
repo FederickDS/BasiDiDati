@@ -180,7 +180,15 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void RimuoviAppuntamento() {}
+    void RimuoviAppuntamento() {
+        Appuntamento appuntamento = AddettoView.getAppuntamentoCode();
+        RimuoviAppuntamentoDAO dao = new RimuoviAppuntamentoDAO();
+        try {
+            AddettoView.print(dao.execute(appuntamento));
+        } catch (SQLException | DAOException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void ModificaAddetto() {}
     void RimuoviAddetto() {}
     void LoginAddetto() {}
