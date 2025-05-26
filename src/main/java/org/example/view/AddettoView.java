@@ -299,6 +299,22 @@ public class AddettoView {
         return addetto;
     }
 
+    public static Addetto choiceAddetto(){
+        Scanner input = new Scanner(System.in);
+        Addetto addetto = new Addetto();
+        String buffer;
+        System.out.print("Inserisci lo username ( non inserire nulla per mantenerlo ): ");
+        buffer = input.nextLine();
+        if(!buffer.isEmpty()){
+            addetto.setUsername(buffer);
+        }
+        System.out.print("Inserisci la password ( non inserire nulla per mantenerlo ): ");
+        buffer = input.nextLine();
+        if(!buffer.isEmpty()){
+            addetto.setPassword(buffer);
+        }
+        return addetto;
+    }
 
     public static Timestamp getGiorno() {
         Scanner input = new Scanner(System.in);

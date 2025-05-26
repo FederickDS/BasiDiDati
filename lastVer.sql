@@ -707,25 +707,25 @@ DROP procedure IF EXISTS `mydb`.`ModificaCorso`;
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE ModificaCorso (
-    IN p_CorsoID    INT UNSIGNED,
-    IN p_minimo     INT UNSIGNED     ,
-    IN p_stato      ENUM('C','P','A') ,
-    IN p_nome       VARCHAR(45)      ,
-    IN p_costo      INT UNSIGNED     ,
-    IN p_data_inizio TIMESTAMP       ,
-    IN p_data_fine  TIMESTAMP        ,
-    IN p_capienza   INT UNSIGNED
+    IN p_CorsoID INT UNSIGNED,
+    IN p_minimo INT UNSIGNED,
+    IN p_stato ENUM('C', 'P', 'A'),
+    IN p_nome VARCHAR(45),
+    IN p_costo INT UNSIGNED,
+    IN p_data_inizio TIMESTAMP,
+    IN p_data_fine TIMESTAMP,
+    IN p_capienza INT UNSIGNED
 )
 BEGIN
     UPDATE Corso
     SET
-        minimo      = IF(p_minimo     IS NULL, minimo,      p_minimo),
-        stato       = IF(p_stato      IS NULL, stato,       p_stato),
-        nome        = IF(p_nome       IS NULL, nome,        p_nome),
-        costo       = IF(p_costo      IS NULL, costo,       p_costo),
-        data_inizio = IF(p_data_inizio IS NULL, data_inizio, p_data_inizio),
-        data_fine   = IF(p_data_fine  IS NULL, data_fine,   p_data_fine),
-        capienza    = IF(p_capienza   IS NULL, capienza,    p_capienza)
+        minimo = p_minimo,
+        stato = p_stato,
+        nome = p_nome,
+        costo = p_costo,
+        data_inizio = p_data_inizio,
+        data_fine = p_data_fine,
+        capienza = p_capienza
     WHERE CorsoID = p_CorsoID;
 END$$
 
@@ -871,21 +871,24 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure ModificaPasswordAddetto
+-- procedure ModificaAddetto
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`ModificaPasswordAddetto`;
+DROP procedure IF EXISTS `mydb`.`ModificaAddetto`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE ModificaPasswordAddetto (
+CREATE PROCEDURE ModificaAddetto (
     IN p_CF           CHAR(16),
+    IN p_nuovoUsername VARCHAR(30),
     IN p_nuovaPassword VARCHAR(32)
 )
 BEGIN
     UPDATE Addetto
-    SET password = p_nuovaPassword
+    SET
+    password = p_nuovaPassword,
+    username = p_nuovoUsername
     WHERE Utilizzatore = p_CF;
 END$$
 
