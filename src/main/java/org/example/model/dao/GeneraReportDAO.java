@@ -6,6 +6,7 @@ import org.example.model.domain.Report;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Types;
 
 public class GeneraReportDAO implements GenericProcedureDAO<Report> {
 
@@ -16,14 +17,18 @@ public class GeneraReportDAO implements GenericProcedureDAO<Report> {
         }
         Report report =  (Report) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL GeneraReport(?,?,?,?)}");
+            CallableStatement cs = conn.prepareCall("{CALL ReportAccessi(?,?,?,?)}");
 
             cs.setTimestamp(1, report.getInizio());
             cs.setTimestamp(2, report.getFine());
-            cs.registerOutParameter(3, report.getUtentiPrevisti());
-            cs.registerOutParameter(4, report.getUtentiEffettivi());
+            cs.registerOutParameter(3, java.sql.Types.INTEGER);
+            cs.registerOutParameter(4, java.sql.Types.INTEGER);
 
             cs.execute();
+
+            //dopo l'esecuzione prendi i valori calcolati
+            report.setUtentiPrevisti(cs.getInt(3));
+            report.setUtentiEffettivi(cs.getInt(4));
         } catch (SQLException e) {
             throw new DAOException("Generazione del report fallita: " + e.getMessage());
         }

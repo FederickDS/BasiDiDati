@@ -233,7 +233,12 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void VisualizzaUtentiDiUnCorso() {}
+    void VisualizzaUtentiDiUnCorso() {
+        //1) ottieni codice del corso
+        Corso corso = new Corso();
+        corso.setCorsoID(AddettoView.getCodiceCorso());
+        //2) tramite dao stampa il contenuto
+    }
     void VisualizzaCorsiDiUnUtente() {}
     void VisualizzaAppuntamentiDiUnCorso() {}
 
