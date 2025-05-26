@@ -145,7 +145,18 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void AggiungiAddetto() {}
+    void AggiungiAddetto() {
+        //1) mi prendo le informazioni dell'utilizzatore (prende da solo il codice fiscale)
+        Utilizzatore utilizzatore = AddettoView.getUtilizzatore();
+        //3) mi prendo le informazioni dell'addetto
+        utilizzatore.setAddetto(AddettoView.getAddetto());
+        InserisciAddettoDAO dao = new InserisciAddettoDAO();
+        try {
+            AddettoView.print(dao.execute(utilizzatore));
+        } catch (SQLException | DAOException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void ModificaCorso() {
         int id = AddettoView.getCodiceCorso();
         Corso corso = AddettoView.changeCorso("( lascia vuoto per non modificare )");

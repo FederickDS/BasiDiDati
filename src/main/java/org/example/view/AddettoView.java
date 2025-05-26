@@ -289,6 +289,16 @@ public class AddettoView {
         return appuntamento;
     }
 
+    public static Addetto getAddetto(){
+        Scanner input = new Scanner(System.in);
+        Addetto addetto = new Addetto();
+        System.out.print("Inserisci lo username: ");
+        addetto.setUsername(input.nextLine());
+        System.out.print("Inserisci la password: ");
+        addetto.setPassword(input.nextLine());
+        return addetto;
+    }
+
 
     public static Timestamp getGiorno() {
         Scanner input = new Scanner(System.in);
