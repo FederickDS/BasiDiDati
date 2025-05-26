@@ -376,8 +376,8 @@ public class AddettoView {
         }
     }
 
-    public static void printAppuntamenti(List<Appuntamento> lista) {
-        for(Appuntamento appuntamento : lista){
+    public static void printAppuntamenti(List<Appuntamento> appuntamenti) {
+        for(Appuntamento appuntamento : appuntamenti){
             System.out.println(appuntamento);
         }
     }
