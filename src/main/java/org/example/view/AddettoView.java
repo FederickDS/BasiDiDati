@@ -341,4 +341,25 @@ public class AddettoView {
         int minuto = input.nextInt();
         return TimestampGenerator.generaTimestamp(anno,mese,giorno,ora,minuto,0);
     }
+
+    public static Report getDateReport() {
+        Report report = new Report();
+        try{
+            System.out.print("Inserisci l'orario di inizio: ");
+            report.setInizio(AddettoView.getOrario());
+            System.out.print("Inserisci l'orario di fine: ");
+            report.setFine(AddettoView.getOrario());
+        }catch(IllegalArgumentException e){
+            System.out.println("Hai inserito un orario con dei valori impossibili, ritenta.");
+        }
+        return report;
+    }
+
+    public static void printReport(Report report) {
+        System.out.println("Grazie per aver richiesto il report");
+        System.out.println("Orario di inizio: " + report.getInizio());
+        System.out.println("Orario di fine: " + report.getFine());
+        System.out.println("Numero di utenti previsti: " + report.getUtentiPrevisti());
+        System.out.println("Numero di utenti effettivi: " + report.getUtentiEffettivi());
+    }
 }

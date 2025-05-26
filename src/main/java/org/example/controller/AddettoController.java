@@ -1,11 +1,9 @@
 package org.example.controller;
 
-import jdk.jshell.execution.StreamingExecutionControl;
 import org.example.exception.DAOException;
 import org.example.model.dao.*;
 import org.example.model.domain.*;
 import org.example.view.AddettoView;
-import org.example.view.UtenteView;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -221,8 +219,20 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void LoginAddetto() {}
-    void GeneraReportAccessi() {}
+    void LoginAddetto() {
+        //potrebbe essere un'operazione INUTILE, RIVEDERE !!!!!!!!!!!!!!!!!
+        ApplicationController applicationController = new ApplicationController();
+        applicationController.start();
+    }
+    void GeneraReportAccessi() {
+        Report report = AddettoView.getDateReport();
+        GeneraReportDAO dao = new GeneraReportDAO();
+        try {
+            AddettoView.printReport(dao.execute(report));
+        } catch (SQLException | DAOException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void VisualizzaUtentiDiUnCorso() {}
     void VisualizzaCorsiDiUnUtente() {}
     void VisualizzaAppuntamentiDiUnCorso() {}
