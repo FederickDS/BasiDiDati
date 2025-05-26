@@ -211,7 +211,16 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void RimuoviAddetto() {}
+    void RimuoviAddetto() {
+        Addetto addetto = new Addetto();
+        addetto.setCF(AddettoView.getCodiceFiscale());
+        RimuoviAddettoDAO dao = new RimuoviAddettoDAO();
+        try {
+            AddettoView.print(dao.execute(addetto));
+        } catch (SQLException | DAOException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void LoginAddetto() {}
     void GeneraReportAccessi() {}
     void VisualizzaUtentiDiUnCorso() {}
