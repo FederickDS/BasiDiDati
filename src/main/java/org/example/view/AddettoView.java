@@ -240,6 +240,56 @@ public class AddettoView {
         return corso;
     }
 
+    public static Appuntamento getAppuntamentoCode(){
+        Scanner input = new Scanner(System.in);
+        Appuntamento appuntamento = new Appuntamento();
+        try {
+            System.out.print("Inserisci il corso: ");
+            appuntamento.setCorso(input.nextInt());
+            System.out.println("Inserisci la data di inizio:");
+            appuntamento.setInizio(getOrario());
+        }catch(IllegalArgumentException e){
+            System.out.println("Hai inserito un valore di tipo errato, ritenta.");
+        }
+        return appuntamento;
+    }
+
+    public static Appuntamento getAppuntamentoExtra(){
+        Scanner input = new Scanner(System.in);
+        Appuntamento appuntamento = new Appuntamento();
+        try {
+            System.out.print("Inserisci la vasca: ");
+            appuntamento.setVasca(input.nextLine());
+            System.out.println("Inserisci la data di fine:");
+            appuntamento.setFine(getOrario());
+        }catch(IllegalArgumentException e){
+            System.out.println("Hai inserito un valore di tipo errato, ritenta.");
+        }
+        return appuntamento;
+    }
+
+    public static Appuntamento getAppuntamentoChoice(){
+        Scanner input = new Scanner(System.in);
+        Appuntamento appuntamento = new Appuntamento();
+        String buffer;
+        try {
+            System.out.print("Inserisci la vasca (non inserire niente per lasciare): ");
+            buffer = input.nextLine();
+            if(!buffer.isEmpty()){
+                appuntamento.setVasca(buffer);
+            }
+            System.out.println("Vuoi cambiare la data di fine (Si: premi almeno un tasto, No: premi solo invio)?");
+            buffer = input.nextLine();
+            if(!buffer.isEmpty()){
+                appuntamento.setFine(getOrario());
+            }
+        }catch(IllegalArgumentException e){
+            System.out.println("Hai inserito un valore di tipo errato, ritenta.");
+        }
+        return appuntamento;
+    }
+
+
     public static Timestamp getGiorno() {
         Scanner input = new Scanner(System.in);
         System.out.print("Inserisci l'anno: ");
@@ -249,5 +299,20 @@ public class AddettoView {
         System.out.print("Inserisci il giorno: ");
         int giorno = input.nextInt();
         return TimestampGenerator.generaTimestamp(anno,mese,giorno,0,0,0);
+    }
+
+    public static Timestamp getOrario() {
+        Scanner input = new Scanner(System.in);
+        System.out.print("Inserisci l'anno: ");
+        int anno = input.nextInt();
+        System.out.print("Inserisci il mese: ");
+        int mese = input.nextInt();
+        System.out.print("Inserisci il giorno: ");
+        int giorno = input.nextInt();
+        System.out.print("Inserisci l'ora: ");
+        int ora = input.nextInt();
+        System.out.print("Inserisci il minuto: ");
+        int minuto = input.nextInt();
+        return TimestampGenerator.generaTimestamp(anno,mese,giorno,ora,minuto,0);
     }
 }

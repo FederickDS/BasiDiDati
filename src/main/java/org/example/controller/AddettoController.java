@@ -133,7 +133,18 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void AggiungiAppuntamento() {}
+    void AggiungiAppuntamento() {
+        Appuntamento appuntamento = AddettoView.getAppuntamentoCode();
+        Appuntamento appuntamentoExtra = AddettoView.getAppuntamentoExtra();
+        appuntamento.setFine(appuntamentoExtra.getFine());
+        appuntamento.setVasca(appuntamentoExtra.getVasca());
+        InserisciAppuntamentoDAO dao = new InserisciAppuntamentoDAO();
+        try {
+            AddettoView.print(dao.execute(appuntamento));
+        } catch (SQLException | DAOException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void AggiungiAddetto() {}
     void ModificaCorso() {
         int id = AddettoView.getCodiceCorso();
