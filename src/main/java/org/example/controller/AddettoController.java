@@ -7,6 +7,7 @@ import org.example.view.AddettoView;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 public class AddettoController implements Controller {
 
@@ -42,7 +43,7 @@ public class AddettoController implements Controller {
                 case 13 -> RimuoviAddetto();
                 case 14 -> LoginAddetto();
                 case 15 -> GeneraReportAccessi();
-                case 16 -> VisualizzaUtentiDiUnCorso();
+                case 16 -> VisualizzaIscrittiAUnCorso();
                 case 17 -> VisualizzaCorsiDiUnUtente();
                 case 18 -> VisualizzaAppuntamentiDiUnCorso();
                 case 19 -> System.exit(0);
@@ -233,13 +234,23 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void VisualizzaUtentiDiUnCorso() {
+    void VisualizzaIscrittiAUnCorso() {
         //1) ottieni codice del corso
-        Corso corso = new Corso();
-        corso.setCorsoID(AddettoView.getCodiceCorso());
+        int corso = AddettoView.getCodiceCorso();
         //2) tramite dao stampa il contenuto
+        VisualizzaIscrittiCorsoDAO dao = new VisualizzaIscrittiCorsoDAO();
+        try {
+            List<IscrittoCorso> lista = dao.execute(corso);
+            AddettoView.printUtenti(lista);
+        } catch (DAOException e) {
+            throw new RuntimeException(e);
+        }
     }
-    void VisualizzaCorsiDiUnUtente() {}
+    void VisualizzaCorsiDiUnUtente() {
+        //1) ottieni codice fiscale di un utente
+        String CF = AddettoView.getCodiceFiscale();
+        //2)tramite dao ottieni tutti i corsi a cui è iscritto
+    }
     void VisualizzaAppuntamentiDiUnCorso() {}
 
 }

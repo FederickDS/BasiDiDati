@@ -5,6 +5,7 @@ import org.example.utils.TimestampGenerator;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Scanner;
 
 public class AddettoView {
@@ -361,5 +362,11 @@ public class AddettoView {
         System.out.println("Orario di fine: " + report.getFine());
         System.out.println("Numero di utenti previsti: " + report.getUtentiPrevisti());
         System.out.println("Numero di utenti effettivi: " + report.getUtentiEffettivi());
+    }
+
+    public static void printUtenti(List<IscrittoCorso> iscritti) {
+        for (IscrittoCorso i : iscritti) {
+            System.out.println(i);
+        }
     }
 }
