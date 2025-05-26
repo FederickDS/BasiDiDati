@@ -32,7 +32,7 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `mydb`.`Corso` ;
 
 CREATE TABLE IF NOT EXISTS `mydb`.`Corso` (
-  `CorsoID` INT UNSIGNED NOT NULL,
+  `CorsoID` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `minimo` INT UNSIGNED NOT NULL,
   `stato` ENUM('C', 'P', 'A') NOT NULL,
   `nome` VARCHAR(45) NOT NULL,
@@ -612,7 +612,7 @@ DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE checkAppuntamentiPerBadge(
   IN  p_Badge         INT UNSIGNED,
-  OUT p_hasAppuntamenti  BOOLEAN 
+  OUT p_hasAppuntamenti  BOOLEAN
 )
 BEGIN
   DECLARE v_CF       CHAR(16);
@@ -631,7 +631,7 @@ BEGIN
   END IF;
 
   -- 2) Conta gli appuntamenti di oggi per i corsi a cui è iscritto
-  SELECT COUNT(*) 
+  SELECT COUNT(*)
     INTO v_count
     FROM Appuntamento A
     JOIN Iscrizione   I ON A.Corso = I.Corso
@@ -707,27 +707,25 @@ DROP procedure IF EXISTS `mydb`.`ModificaCorso`;
 DELIMITER $$
 USE `mydb`$$
 CREATE PROCEDURE ModificaCorso (
-    IN p_CorsoID INT UNSIGNED,
-    IN p_minimo INT UNSIGNED,
-    IN p_stato ENUM('C', 'P', 'A'),
-    IN p_nome VARCHAR(45),
-    IN p_costo INT UNSIGNED,
-    IN p_num_iscritti INT UNSIGNED,
-    IN p_data_inizio TIMESTAMP,
-    IN p_data_fine TIMESTAMP,
-    IN p_capienza INT UNSIGNED
+    IN p_CorsoID    INT UNSIGNED,
+    IN p_minimo     INT UNSIGNED     ,
+    IN p_stato      ENUM('C','P','A') ,
+    IN p_nome       VARCHAR(45)      ,
+    IN p_costo      INT UNSIGNED     ,
+    IN p_data_inizio TIMESTAMP       ,
+    IN p_data_fine  TIMESTAMP        ,
+    IN p_capienza   INT UNSIGNED
 )
 BEGIN
     UPDATE Corso
     SET
-        minimo = p_minimo,
-        stato = p_stato,
-        nome = p_nome,
-        costo = p_costo,
-        num_iscritti = p_num_iscritti,
-        data_inizio = p_data_inizio,
-        data_fine = p_data_fine,
-        capienza = p_capienza
+        minimo      = IF(p_minimo     IS NULL, minimo,      p_minimo),
+        stato       = IF(p_stato      IS NULL, stato,       p_stato),
+        nome        = IF(p_nome       IS NULL, nome,        p_nome),
+        costo       = IF(p_costo      IS NULL, costo,       p_costo),
+        data_inizio = IF(p_data_inizio IS NULL, data_inizio, p_data_inizio),
+        data_fine   = IF(p_data_fine  IS NULL, data_fine,   p_data_fine),
+        capienza    = IF(p_capienza   IS NULL, capienza,    p_capienza)
     WHERE CorsoID = p_CorsoID;
 END$$
 
@@ -939,12 +937,12 @@ CREATE PROCEDURE ReportAccessi (
     OUT p_effettivi  INT
 )
 BEGIN
-    -- Calcolo degli accessi previsti: 
+    -- Calcolo degli accessi previsti:
     -- somma di num_iscritti per ogni appuntamento con inizio nell’intervallo
     SELECT COALESCE(SUM(c.num_iscritti), 0)
     INTO p_previsti
     FROM Appuntamento a
-    JOIN Corso c 
+    JOIN Corso c
       ON a.Corso = c.CorsoID
     WHERE a.inizio BETWEEN p_inizio AND p_fine;
 
@@ -971,7 +969,7 @@ CREATE PROCEDURE VisualizzaIscrittiCorso (
     IN p_CorsoID INT UNSIGNED
 )
 BEGIN
-    SELECT 
+    SELECT
         u.Utilizzatore   AS CF,
         ut.nome          AS Nome
     FROM Iscrizione u
@@ -995,7 +993,7 @@ CREATE PROCEDURE VisualizzaCorsiUtente (
     IN p_CF CHAR(16)
 )
 BEGIN
-    SELECT 
+    SELECT
         c.CorsoID,
         c.nome          AS NomeCorso
     FROM Iscrizione i
@@ -1019,7 +1017,7 @@ CREATE PROCEDURE VisualizzaAppuntamentiCorso (
     IN p_CorsoID INT UNSIGNED
 )
 BEGIN
-    SELECT 
+    SELECT
         a.inizio  AS Inizio,
         a.fine    AS Fine,
         a.Vasca   AS Vasca

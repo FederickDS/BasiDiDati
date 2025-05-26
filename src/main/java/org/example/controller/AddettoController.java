@@ -73,11 +73,11 @@ public class AddettoController implements Controller {
         //5) salva tramite DAO
         try {
             RegistraNuovoUtenteDAO dao = new RegistraNuovoUtenteDAO();
-            System.out.println(dao.execute(utilizzatore, corso).toString());
+            AddettoView.print(dao.execute(utilizzatore, corso).toString());
         }catch (SQLException e){
-           System.out.println("Inserimento fallito: errore nel database");
+            AddettoView.print("Inserimento fallito: errore nel database");
         } catch (DAOException e) {
-            System.out.println(e.getMessage());
+            AddettoView.print(e.getMessage());
         }
     }
     void AggiornaBadgeUtente() {
@@ -88,9 +88,9 @@ public class AddettoController implements Controller {
         //ottenuto il badge, modifichiamo quello esistente.
         AggiornaBadgeUtenteDAO dao = new AggiornaBadgeUtenteDAO();
         try {
-            System.out.println(dao.execute(utilizzatore));
+            AddettoView.print(dao.execute(utilizzatore));
         } catch (DAOException | SQLException e) {
-            System.out.println(e.getMessage());
+            AddettoView.print(e.getMessage());
         }
     }
     void AggiornaContattiUtente() {
@@ -105,16 +105,15 @@ public class AddettoController implements Controller {
         utilizzatore.addEmail(AddettoView.GetEmail());
         NuovoContattoUtenteDAO dao = new NuovoContattoUtenteDAO();
         try {
-            System.out.println(dao.execute(utilizzatore,choice));
+            AddettoView.print(dao.execute(utilizzatore,choice).toString());
         } catch (DAOException | SQLException e) {
-            System.out.println(e.getMessage());
+            AddettoView.print(e.getMessage());
         }
     }
     void NuovaIscrizioneUtente() {
         NuovaIscrizioneUtenteDAO dao = new NuovaIscrizioneUtenteDAO();
         Corso corso = new Corso();
         corso.setCorsoID(AddettoView.getCodiceCorso());
-        AddettoView.print("Costo corso: " + dao.showCostoCorso(corso.getCorsoID()));
         Utilizzatore utilizzatore = new Utilizzatore();
         utilizzatore.setCF(AddettoView.getCodiceFiscale());
         try {
@@ -123,10 +122,30 @@ public class AddettoController implements Controller {
             AddettoView.print("Inserimento fallito: errore nel database" + e.getMessage());
         }
     }
-    void AggiungiCorso() {}
+    void AggiungiCorso() {
+        //1)ricevi tutte le informazioni del corso
+        AddettoView.print("Inserimento informazioni per nuovo corso ");
+        Corso corso = AddettoView.getCorso("");
+        InserisciCorsoDAO dao = new InserisciCorsoDAO();
+        try {
+            AddettoView.print(dao.execute(corso).toString());
+        } catch (DAOException|SQLException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void AggiungiAppuntamento() {}
     void AggiungiAddetto() {}
-    void ModificaCorso() {}
+    void ModificaCorso() {
+        int id = AddettoView.getCodiceCorso();
+        Corso corso = AddettoView.changeCorso("( lascia vuoto per non modificare )");
+        corso.setCorsoID(id);
+        ModificaCorsoDAO dao = new ModificaCorsoDAO();
+        try {
+            AddettoView.print(dao.execute(corso).toString());
+        } catch (DAOException|SQLException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void AnnullaCorso() {}
     void ModificaAppuntamento() {}
     void RimuoviAppuntamento() {}

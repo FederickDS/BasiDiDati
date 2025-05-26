@@ -1,8 +1,10 @@
 package org.example.view;
 
 import org.example.model.domain.*;
+import org.example.utils.TimestampGenerator;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.Scanner;
 
 public class AddettoView {
@@ -162,6 +164,90 @@ public class AddettoView {
     }
 
 
+    public static Corso getCorso(String suffisso) {
+        char stato;
+        Corso corso = new Corso();
+        Scanner input = new Scanner(System.in);
+        try {
+            System.out.print("Inserisci il nome"+ suffisso+": ");
+            corso.setNome(input.nextLine());
+            System.out.print("Inserisci il minimo di utenti"+ suffisso +": ");
+            corso.setMinimo(input.nextInt());
+            System.out.print("Inserisci la capienza"+ suffisso +": ");
+            corso.setCapienza(input.nextInt());
+            System.out.print("Inserisci il costo del corso" + suffisso +": ");
+            corso.setCosto(input.nextInt());
+            System.out.print("Data di inizio del corso" + suffisso +": ");
+            corso.setDataInizio(getGiorno());
+            System.out.print("Data di fine del corso" + suffisso +": ");
+            corso.setDataFine(getGiorno());
+            do {
+                System.out.print("Il corso è già stato confermato (Si: C /No: P)? ");
+                stato = input.next().charAt(0);
+            } while (stato != 'C' && stato != 'P');
+            corso.setStato(stato);
+            corso.setNumIscritti(0);//non viene deciso dall'addetto ma lo imponiamo noi
+        }catch (IllegalArgumentException e){
+            System.out.println("Hai inserito un valore di tipo, ritenta.");
+        }
+        return corso;
+    }
 
+    public static Corso changeCorso(String suffisso){
+        char stato;
+        String buffer;
+        Corso corso = new Corso();
+        Scanner input = new Scanner(System.in);
+        try {
+            System.out.print("Inserisci il nome"+ suffisso+": ");
+            buffer = input.nextLine();
+            if(!buffer.isEmpty()){
+                corso.setNome(buffer);
+            }
+            System.out.print("Inserisci il minimo di utenti"+ suffisso +": ");
+            buffer = input.nextLine();
+            if(!buffer.isEmpty()){
+                corso.setMinimo(Integer.getInteger(buffer));
+            }
+            System.out.print("Inserisci la capienza"+ suffisso +": ");
+            buffer = input.nextLine();
+            if(!buffer.isEmpty()){
+                corso.setCapienza(Integer.getInteger(buffer));
+            }
+            System.out.print("Inserisci il costo del corso" + suffisso +": ");
+            buffer = input.nextLine();
+            if(!buffer.isEmpty()){
+                corso.setCosto(Integer.getInteger(buffer));
+            }
+            System.out.print("Vuoi cambiare la data di inizio del corso (Si: premi almeno un tasto, no: premi solo invio)? ");
+            buffer = input.nextLine();
+            if(!buffer.isEmpty()){
+                corso.setDataInizio(getGiorno());
+            }
+            System.out.print("Vuoi cambiare la data di inizio del corso (Si: premi almeno un tasto, no: premi solo invio)? ");
+            buffer = input.nextLine();
+            if(!buffer.isEmpty()){
+                corso.setDataFine(getGiorno());
+            }
+            do {
+                System.out.print("Il corso è già stato confermato (Si: C /No: P)? ");
+                stato = input.next().charAt(0);
+            } while (stato != 'C' && stato != 'P');
+            corso.setStato(stato);
+        }catch (IllegalArgumentException e){
+            System.out.println("Hai inserito un valore di tipo, ritenta.");
+        }
+        return corso;
+    }
 
+    public static Timestamp getGiorno() {
+        Scanner input = new Scanner(System.in);
+        System.out.print("Inserisci l'anno: ");
+        int anno = input.nextInt();
+        System.out.print("Inserisci il mese: ");
+        int mese = input.nextInt();
+        System.out.print("Inserisci il giorno: ");
+        int giorno = input.nextInt();
+        return TimestampGenerator.generaTimestamp(anno,mese,giorno,0,0,0);
+    }
 }

@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 public class Corso {
     private Integer corsoID;
     private Integer minimo;
-    private String stato;
+    private char stato;
     private String nome;
     private Integer costo;
     private Integer numIscritti;
@@ -16,7 +16,7 @@ public class Corso {
     // Costruttori, getter e setter
     public Corso() {}
 
-    public Corso(Integer corsoID, Integer minimo, String stato, String nome, Integer costo,
+    public Corso(Integer corsoID, Integer minimo, char stato, String nome, Integer costo,
                  Integer numIscritti, Timestamp dataInizio, Timestamp dataFine, Integer capienza) {
         this.corsoID = corsoID;
         this.minimo = minimo;
@@ -36,8 +36,8 @@ public class Corso {
     public Integer getMinimo() { return minimo; }
     public void setMinimo(Integer minimo) { this.minimo = minimo; }
 
-    public String getStato() { return stato; }
-    public void setStato(String stato) { this.stato = stato; }
+    public char getStato() { return stato; }
+    public void setStato(char stato) { this.stato = stato; }
 
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }

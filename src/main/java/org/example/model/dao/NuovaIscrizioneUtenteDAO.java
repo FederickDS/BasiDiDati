@@ -23,20 +23,4 @@ public class NuovaIscrizioneUtenteDAO implements GenericProcedureDAO<String>{
             throw new DAOException("Errore nell'inserimento in iscrizione: " + e.getMessage());
         }
     }
-
-    public String showCostoCorso(int corsoID){
-        String query = "SELECT costo FROM Corso WHERE CorsoID = ?";
-        try{
-            Connection conn = ConnectionFactory.getConnection();
-            PreparedStatement cs = conn.prepareStatement(query);
-            cs.setInt(1,corsoID);
-            ResultSet rs = cs.executeQuery();
-            if(rs.next()){
-                return String.valueOf(rs.getInt("costo"));
-            }
-        } catch (SQLException e) {
-            System.out.print("Errore nella lettura del costo del corso: " + e.getMessage());
-        }
-        return null;
-    }
 }
