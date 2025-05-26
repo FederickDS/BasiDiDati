@@ -258,6 +258,16 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void VisualizzaAppuntamentiDiUnCorso() {}
-
+    void VisualizzaAppuntamentiDiUnCorso() {
+        //1)prendi ID del corso da inserire
+        int corsoID = AddettoView.getCodiceCorso();
+        //2) tramite dao ottieni gli appuntamenti inerenti a tale corso
+        VisualizzaAppuntamentiCorsoDAO dao = new VisualizzaAppuntamentiCorsoDAO();
+        try{
+            List<Appuntamento> lista = dao.execute(corsoID);
+            AddettoView.printAppuntamenti(lista);
+        } catch (DAOException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
 }

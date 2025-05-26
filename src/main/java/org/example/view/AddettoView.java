@@ -365,15 +365,20 @@ public class AddettoView {
     }
 
     public static void printUtenti(List<IscrittoCorso> iscritti) {
-        for (IscrittoCorso i : iscritti) {
-            System.out.println(i);
+        for (IscrittoCorso iscritto : iscritti) {
+            System.out.println(iscritto);
         }
     }
 
     public static void printCorsi(List<Corso> corsi) {
-        for (Corso i : corsi) {
-            System.out.println(i);
+        for (Corso corso : corsi) {
+            System.out.println(corso);
         }
     }
 
+    public static void printAppuntamenti(List<Appuntamento> lista) {
+        for(Appuntamento appuntamento : lista){
+            System.out.println(appuntamento);
+        }
+    }
 }

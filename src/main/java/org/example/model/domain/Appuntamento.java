@@ -30,4 +30,9 @@ public class Appuntamento {
 
     public String getVasca() { return vasca; }
     public void setVasca(String vasca) { this.vasca = vasca; }
+
+    @Override
+    public String toString() {
+        return "Vasca: " + this.getVasca() + " - Inizio: " + this.getInizio() + " - Fine: " + this.getFine();
+    }
 }
