@@ -146,7 +146,17 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void AnnullaCorso() {}
+    void AnnullaCorso() {
+        Corso corso = new Corso();
+        corso.setCorsoID(AddettoView.getCodiceCorso());
+        //dato il codice del corso, annulla tale corso
+        AnnullaCorsoDAO dao = new AnnullaCorsoDAO();
+        try{
+            AddettoView.print(dao.execute(corso));
+        }catch (DAOException|SQLException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void ModificaAppuntamento() {}
     void RimuoviAppuntamento() {}
     void ModificaAddetto() {}
