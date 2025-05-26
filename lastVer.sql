@@ -973,8 +973,8 @@ CREATE PROCEDURE VisualizzaIscrittiCorso (
 )
 BEGIN
     SELECT
-        u.Utilizzatore   AS CF,
-        ut.nome          AS Nome
+        u.Utente    AS CF,    -- qui uso la colonna corretta
+        ut.nome     AS Nome
     FROM Iscrizione u
     JOIN Utilizzatore ut
       ON u.Utente = ut.CF
@@ -997,7 +997,7 @@ CREATE PROCEDURE VisualizzaCorsiUtente (
 )
 BEGIN
     SELECT
-        c.CorsoID,
+        c.CorsoID       AS CorsoID,
         c.nome          AS NomeCorso
     FROM Iscrizione i
     JOIN Corso c
