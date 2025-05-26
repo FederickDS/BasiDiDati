@@ -168,7 +168,18 @@ public class AddettoController implements Controller {
             AddettoView.print(e.getMessage());
         }
     }
-    void ModificaAppuntamento() {}
+    void ModificaAppuntamento() {
+        Appuntamento appuntamento = AddettoView.getAppuntamentoCode();
+        Appuntamento appuntamentoChoice = AddettoView.getAppuntamentoChoice();
+        appuntamento.setFine(appuntamentoChoice.getFine());
+        appuntamento.setVasca(appuntamentoChoice.getVasca());
+        ModificaAppuntamentoDAO dao = new ModificaAppuntamentoDAO();
+        try {
+            AddettoView.print(dao.execute(appuntamento));
+        } catch (SQLException | DAOException e) {
+            AddettoView.print(e.getMessage());
+        }
+    }
     void RimuoviAppuntamento() {}
     void ModificaAddetto() {}
     void RimuoviAddetto() {}
