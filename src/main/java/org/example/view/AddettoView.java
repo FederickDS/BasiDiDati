@@ -338,9 +338,7 @@ public class AddettoView {
         int giorno = input.nextInt();
         System.out.print("Inserisci l'ora: ");
         int ora = input.nextInt();
-        System.out.print("Inserisci il minuto: ");
-        int minuto = input.nextInt();
-        return TimestampGenerator.generaTimestamp(anno,mese,giorno,ora,minuto,0);
+        return TimestampGenerator.generaTimestamp(anno,mese,giorno,ora,0,0);
     }
 
     public static Report getDateReport() {

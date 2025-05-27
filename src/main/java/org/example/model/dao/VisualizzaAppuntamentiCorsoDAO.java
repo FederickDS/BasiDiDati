@@ -24,8 +24,8 @@ public class VisualizzaAppuntamentiCorsoDAO implements GenericProcedureDAO<List<
 
             cs.setInt(1, corsoID);
 
-            boolean hasResult = cs.execute();
-            if (hasResult) {
+            int hasResult = cs.executeUpdate();
+            if (hasResult>0) {
                 try (ResultSet rs = cs.getResultSet()) {
                     while (rs.next()) {
                         Appuntamento appuntamento = new Appuntamento();

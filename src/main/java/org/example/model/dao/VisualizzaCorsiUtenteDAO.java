@@ -23,8 +23,8 @@ public class VisualizzaCorsiUtenteDAO implements GenericProcedureDAO<List<Corso>
 
             cs.setString(1, CF);
 
-            boolean hasResult = cs.execute();
-            if (hasResult) {
+            int hasResult = cs.executeUpdate();
+            if (hasResult>0) {
                 try (ResultSet rs = cs.getResultSet()) {
                     while (rs.next()) {
                         Corso corso = new Corso();

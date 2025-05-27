@@ -7,14 +7,15 @@ public class ApplicationController implements Controller {
 
     @Override
     public void start() {
-        LoginController loginController = new LoginController();
-        loginController.start();
-        cred = loginController.getCred();
+        do {
+            LoginController loginController = new LoginController();
+            loginController.start();
+            cred = loginController.getCred();
 
-        if(cred.getRole() == null) {
-            //da LoginCon Role.getInt(role)=null, quindi entra nell'if
-            throw new RuntimeException("Credenziali invalide");
-        }
+            if(cred.getRole() == null){
+                System.out.println("Credenziali invalide");
+            }
+        }while (cred.getRole() == null);
 
         switch(cred.getRole()) {
             case UTENTE -> new UtenteController().start();

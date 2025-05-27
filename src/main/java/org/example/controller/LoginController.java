@@ -19,7 +19,7 @@ public class LoginController implements Controller {
         }
         try {
             // se ruolo è già stato assegnato non serve la verifica credenziali dell'addettp
-            if(cred.getRole() == null) {
+            if(cred.getRole() != null) {
                 cred = new LoginProcedureDAO().execute(cred.getUsername(), cred.getPassword());
             }
         } catch(DAOException e) {
