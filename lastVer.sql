@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`Corso` (
   `stato` ENUM('C', 'P', 'A') NOT NULL,
   `nome` VARCHAR(45) NOT NULL,
   `costo` INT UNSIGNED NOT NULL,
-  `num_iscritti` INT UNSIGNED NOT NULL,
+  `num_iscritti` INT UNSIGNED NOT NULL DEFAULT 0,
   `data_inizio` TIMESTAMP NOT NULL,
   `data_fine` TIMESTAMP NOT NULL,
   `capienza` INT UNSIGNED NOT NULL,
@@ -679,7 +679,6 @@ CREATE PROCEDURE InserisciCorso (
     IN p_stato ENUM('C', 'P', 'A'),
     IN p_nome VARCHAR(45),
     IN p_costo INT UNSIGNED,
-    IN p_num_iscritti INT UNSIGNED,
     IN p_data_inizio TIMESTAMP,
     IN p_data_fine TIMESTAMP,
     IN p_capienza INT UNSIGNED
@@ -687,11 +686,11 @@ CREATE PROCEDURE InserisciCorso (
 BEGIN
     INSERT INTO Corso (
         minimo, stato, nome, costo,
-        num_iscritti, data_inizio, data_fine, capienza
+        data_inizio, data_fine, capienza
     )
     VALUES (
         p_minimo, p_stato, p_nome, p_costo,
-        p_num_iscritti, p_data_inizio, p_data_fine, p_capienza
+        p_data_inizio, p_data_fine, p_capienza
     );
 END$$
 
@@ -1030,10 +1029,6 @@ BEGIN
 END$$
 
 DELIMITER ;
-
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 USE `mydb`;
 
 DELIMITER $$
@@ -1043,15 +1038,10 @@ DROP TRIGGER IF EXISTS `mydb`.`Corso_BEFORE_INSERT` $$
 USE `mydb`$$
 CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Corso_BEFORE_INSERT` BEFORE INSERT ON `Corso` FOR EACH ROW
 BEGIN
-   -- Controllo data_inizio < data_fine
     IF NEW.data_inizio >= NEW.data_fine THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Errore: la data di inizio deve essere precedente alla data di fine';
-    END IF;
-    -- Controllo num_iscritti <= capienza
-    IF NEW.num_iscritti > NEW.capienza THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Errore: il numero di iscritti non può superare la capienza';
+            SET MESSAGE_TEXT =
+              'Errore: la data di inizio deve essere precedente alla data di fine';
     END IF;
 END$$
 
@@ -1061,17 +1051,254 @@ DROP TRIGGER IF EXISTS `mydb`.`Corso_BEFORE_UPDATE` $$
 USE `mydb`$$
 CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Corso_BEFORE_UPDATE` BEFORE UPDATE ON `Corso` FOR EACH ROW
 BEGIN
-    -- Controllo data_inizio < data_fine
     IF NEW.data_inizio >= NEW.data_fine THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Errore: la data di inizio deve essere precedente alla data di fine';
-    END IF;
-    -- Controllo num_iscritti <= capienza
-    IF NEW.num_iscritti > NEW.capienza THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Errore: il numero di iscritti non può superare la capienza';
+            SET MESSAGE_TEXT =
+              'Errore: la data di inizio deve essere precedente alla data di fine';
     END IF;
 END$$
 
 
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Appuntamento_BEFORE_INSERT` $$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Appuntamento_BEFORE_INSERT` BEFORE INSERT ON `Appuntamento` FOR EACH ROW
+BEGIN
+	DECLARE corso_start DATE;
+    DECLARE corso_end   DATE;
+    DECLARE corso_stato VARCHAR(20);
+
+    -- 1) Controllo inizio ≤ fine per l’appuntamento
+    IF NEW.inizio > NEW.fine THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Data non valida: inizio appuntamento maggiore della data di fine.';
+    END IF;
+
+    -- 2) Ricavo data_inizio, data_fine e stato del corso associato
+    SELECT C.data_inizio, C.data_fine, C.stato
+      INTO corso_start, corso_end, corso_stato
+      FROM Corso C
+     WHERE C.CorsoID = NEW.Corso
+     LIMIT 1;
+
+    IF corso_end IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Inserimento Appuntamento negato: il corso specificato non esiste.';
+    END IF;
+
+    -- 3) Verifico che il corso non sia già annullato
+    IF corso_stato = 'A' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Inserimento Appuntamento negato: il corso risulta annullato.';
+    END IF;
+
+    -- 4) Controllo che le date di Appuntamento non superino la data di fine del corso
+    IF NEW.fine > corso_end THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Data non valida: data di fine appuntamento supera la data di fine del corso.';
+    END IF;
+
+    IF NEW.inizio < corso_start THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Data non valida: data di inizio appuntamento precedente alla data di inizio del corso.';
+    END IF;
+END$$
+
+
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Appuntamento_BEFORE_UPDATE` $$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Appuntamento_BEFORE_UPDATE` BEFORE UPDATE ON `Appuntamento` FOR EACH ROW
+BEGIN
+	DECLARE corso_start DATE;
+    DECLARE corso_end   DATE;
+    DECLARE corso_stato VARCHAR(20);
+
+    -- 1) Controllo inizio ≤ fine nel nuovo record
+    IF NEW.inizio > NEW.fine THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Data non valida: inizio appuntamento maggiore della data di fine.';
+    END IF;
+
+    -- 2) Estrazione info corso
+    SELECT C.data_inizio, C.data_fine, C.stato
+      INTO corso_start, corso_end, corso_stato
+      FROM Corso C
+     WHERE C.CorsoID = NEW.Corso
+     LIMIT 1;
+
+    IF corso_end IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Aggiornamento Appuntamento negato: il corso specificato non esiste.';
+    END IF;
+
+    -- 3) Verifico che il corso non sia annullato
+    IF corso_stato = 'A' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Aggiornamento Appuntamento negato: il corso risulta annullato.';
+    END IF;
+
+    -- 4) Controllo date rispetto al corso
+    IF NEW.fine > corso_end THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Data non valida: data di fine appuntamento supera la data di fine del corso.';
+    END IF;
+
+    IF NEW.inizio < corso_start THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Data non valida: data di inizio appuntamento precedente alla data di inizio del corso.';
+    END IF;
+END$$
+
+
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Utente_BEFORE_INSERT` $$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Utente_BEFORE_INSERT` BEFORE INSERT ON `Utente` FOR EACH ROW
+BEGIN
+	DECLARE cnt_historic INT;
+
+	-- Verifico se esiste già un record in Badge_Storico
+	-- in cui lo stesso badge è stato assegnato allo stesso utente in passato
+	SELECT COUNT(*)
+	  INTO cnt_historic
+	  FROM Badge_Storico BS
+	 WHERE BS.Badge = NEW.Badge
+	   AND BS.Utente = NEW.Utilizzatore;
+
+	IF cnt_historic > 0 THEN
+		SIGNAL SQLSTATE '45000'
+			SET MESSAGE_TEXT =
+			  'Assegnazione negata: questo utente aveva già avuto in passato lo stesso badge.';
+	END IF;
+END$$
+
+
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Utente_BEFORE_UPDATE` $$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Utente_BEFORE_UPDATE` BEFORE UPDATE ON `Utente` FOR EACH ROW
+BEGIN
+	DECLARE cnt_historic_upd INT;
+
+    -- Se si sta cambiando il badge, controllo la tabella storica
+    IF NEW.Badge <> OLD.Badge THEN
+        SELECT COUNT(*)
+          INTO cnt_historic_upd
+          FROM Badge_Storico BS
+         WHERE BS.Badge = NEW.Badge
+           AND BS.Utente = NEW.Utilizzatore;
+
+        IF cnt_historic_upd > 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT =
+                  'Assegnazione negata: questo utente aveva già avuto in passato lo stesso badge.';
+        END IF;
+    END IF;
+END$$
+
+
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Addetto_BEFORE_INSERT` $$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Addetto_BEFORE_INSERT` BEFORE INSERT ON `Addetto` FOR EACH ROW
+BEGIN
+	DECLARE cnt_un INT;
+
+    -- Controllo univocità username
+    SELECT COUNT(*)
+      INTO cnt_un
+      FROM Addetto A
+     WHERE A.username = NEW.username;
+
+    IF cnt_un > 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Inserimento Addetto negato: username già esistente.';
+    END IF;
+END$$
+
+
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Addetto_BEFORE_UPDATE` $$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Addetto_BEFORE_UPDATE` BEFORE UPDATE ON `Addetto` FOR EACH ROW
+BEGIN
+	DECLARE cnt_un INT;
+
+    -- Se si sta cambiando lo username, controllo che il nuovo non sia già usato
+    IF NEW.username <> OLD.username THEN
+        SELECT COUNT(*)
+          INTO cnt_un
+          FROM Addetto A
+         WHERE A.username = NEW.username;
+
+        IF cnt_un > 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT =
+                  'Aggiornamento Addetto negato: username già esistente.';
+        END IF;
+    END IF;
+END$$
+
+
+USE `mydb`$$
+DROP TRIGGER IF EXISTS `mydb`.`Iscrizione_BEFORE_INSERT` $$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Iscrizione_BEFORE_INSERT` BEFORE INSERT ON `Iscrizione` FOR EACH ROW
+BEGIN
+	DECLARE course_end DATE;
+    DECLARE max_capienza INT;
+    DECLARE iscritti_correnti INT;
+
+    -- Controllo esistenza corso
+    SELECT C.data_fine, C.capienza
+    INTO course_end, max_capienza
+    FROM Corso C
+    WHERE C.CorsoID = NEW.Corso LIMIT 1;
+
+    IF course_end IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
+        'Iscrizione negata: il corso specificato non esiste.';
+    END IF;
+
+    -- Controllo se la data corrente è successiva alla data di fine
+    IF CURDATE() > course_end THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
+        'Iscrizione negata: il corso è già terminato.';
+    END IF;
+
+    -- Controllo del numero massimo di iscritti
+    SELECT COUNT(*)
+    INTO iscritti_correnti
+    FROM Iscrizione I
+    WHERE I.Corso = NEW.Corso;
+
+    IF iscritti_correnti >= max_capienza THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT =
+        'Iscrizione negata: il corso ha raggiunto il numero massimo di partecipanti.';
+    END IF;
+
+    UPDATE Corso
+    SET num_iscritti = num_iscritti + 1
+	WHERE CorsoID = NEW.Corso;
+
+END$$
+
+
 DELIMITER ;
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

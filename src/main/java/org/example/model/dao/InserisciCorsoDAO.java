@@ -16,16 +16,15 @@ public class InserisciCorsoDAO implements GenericProcedureDAO {
         }
         Corso corso = (Corso) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL InserisciCorso(?, ?, ?, ?, ?, ?, ?, ?)}");
+            CallableStatement cs = conn.prepareCall("{CALL InserisciCorso(?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setInt(1, corso.getMinimo());            // p_minimo
             cs.setString(2, String.valueOf(corso.getStato()));          // p_stato (ENUM: 'C', 'P', 'A')
             cs.setString(3, corso.getNome());           // p_nome
             cs.setInt(4, corso.getCosto());             // p_costo
-            cs.setInt(5, corso.getNumIscritti());       // p_num_iscritti
-            cs.setTimestamp(6, corso.getDataInizio());  // p_data_inizio
-            cs.setTimestamp(7, corso.getDataFine());    // p_data_fine
-            cs.setInt(8, corso.getCapienza());          // p_capienza
+            cs.setTimestamp(5, corso.getDataInizio());  // p_data_inizio
+            cs.setTimestamp(6, corso.getDataFine());    // p_data_fine
+            cs.setInt(7, corso.getCapienza());          // p_capienza
 
             cs.execute();
         } catch (SQLException e) {
