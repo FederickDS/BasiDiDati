@@ -125,6 +125,7 @@ public class AddettoController implements Controller {
         //1)ricevi tutte le informazioni del corso
         AddettoView.print("Inserimento informazioni per nuovo corso ");
         Corso corso = AddettoView.getCorso("");
+        corso.setNumIscritti(0);//non viene deciso dall'addetto ma lo imponiamo noi
         InserisciCorsoDAO dao = new InserisciCorsoDAO();
         try {
             AddettoView.print(dao.execute(corso).toString());

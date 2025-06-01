@@ -187,7 +187,6 @@ public class AddettoView {
                 stato = input.next().charAt(0);
             } while (stato != 'C' && stato != 'P');
             corso.setStato(stato);
-            corso.setNumIscritti(0);//non viene deciso dall'addetto ma lo imponiamo noi
         }catch (IllegalArgumentException e){
             System.out.println("Hai inserito un valore di tipo, ritenta.");
         }
