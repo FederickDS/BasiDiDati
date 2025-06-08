@@ -21,6 +21,6 @@ public class LoginView {
         System.out.print("password: ");
         String password = reader.readLine();
 
-        return new Credentials(username, password, ruolo);//sarebbe come Role.fromInt(Integer.parseInt(mode))
+        return new Credentials(username, password, null);//sarebbe come Role.fromInt(Integer.parseInt(mode))
     }
 }
