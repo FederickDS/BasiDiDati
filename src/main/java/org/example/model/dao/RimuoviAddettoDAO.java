@@ -15,7 +15,7 @@ public class RimuoviAddettoDAO implements GenericProcedureDAO<String>{
         }
         Addetto addetto = (Addetto) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL RimuoviAddetto(?)}");
+            CallableStatement cs = conn.prepareCall("{CALL rimuoviAddettoSegreteria(?)}");
 
             cs.setString(1, addetto.getCF());
 

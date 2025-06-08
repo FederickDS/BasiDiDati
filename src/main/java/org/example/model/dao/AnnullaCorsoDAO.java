@@ -14,7 +14,7 @@ public class AnnullaCorsoDAO implements GenericProcedureDAO<String>{
         Corso corso = (Corso) params[0];
         try{
             Connection conn = ConnectionFactory.getConnection();
-            CallableStatement cs = conn.prepareCall("{call AnnullaCorso(?)}");
+            CallableStatement cs = conn.prepareCall("{call annullaCorso(?)}");
             cs.setInt(1,corso.getCorsoID());
             cs.executeUpdate();
             return "\n Corso annullato!\n";

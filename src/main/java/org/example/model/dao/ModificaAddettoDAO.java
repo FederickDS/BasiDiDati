@@ -16,7 +16,7 @@ public class ModificaAddettoDAO implements GenericProcedureDAO<String>{
         }
         Addetto addetto = (Addetto) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL ModificaAddetto(?,?,?)}");
+            CallableStatement cs = conn.prepareCall("{CALL modificaAddettoSegreteria(?,?,?)}");
 
             cs.setString(1, addetto.getCF());
             if(addetto.getUsername() != null){

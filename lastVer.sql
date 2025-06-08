@@ -296,15 +296,15 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure nuovoUtente
+-- procedure registrazioneNuovoUtente
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`nuovoUtente`;
+DROP procedure IF EXISTS `mydb`.`registrazioneNuovoUtente`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE nuovoUtente(
+CREATE PROCEDURE registrazioneNuovoUtente(
   IN p_CF        CHAR(16),
   IN p_indirizzo VARCHAR(60),
   IN p_nome      VARCHAR(30),
@@ -315,33 +315,42 @@ CREATE PROCEDURE nuovoUtente(
   IN p_iscrizione INT
 )
 BEGIN
-  DECLARE statoBadge CHAR(1);
-  DECLARE badgeTrovato INT DEFAULT 0;
+  DECLARE statoBadge ENUM('A', 'D');
 
-  START TRANSACTION;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
 
-  -- Controlla che il badge esista e che sia in stato 'D'
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+  -- controllo stato del badge
   SELECT stato INTO statoBadge FROM Badge WHERE BadgeID = p_Badge;
 
-  -- Se il badge non è in stato 'D', genera errore
-  IF statoBadge IS NULL THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Badge non esistente';
-  ELSEIF statoBadge <> 'D' THEN
+  IF statoBadge <> 'D' THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Badge non disponibile: già utilizzato';
   END IF;
 
-  -- Aggiorna lo stato del badge a 'A'
+  -- aggiornamento stato del badge
   UPDATE Badge SET stato = 'A' WHERE BadgeID = p_Badge;
 
-  -- Inserisci l'Utilizzatore
-  INSERT INTO Utilizzatore(CF, indirizzo, nome)
-  VALUES (p_CF, p_indirizzo, p_nome);
+  -- inserimento Utilizzatore
+  IF NOT EXISTS (
+        SELECT 1
+        FROM Utilizzatore
+        WHERE CF = p_CF
+    ) THEN
+        INSERT INTO Utilizzatore (CF, indirizzo, nome)
+        VALUES (p_CF, p_indirizzo, p_nome);
+    END IF;
 
-  -- Inserisci l'Utente
+  -- inserimento Utente
   INSERT INTO Utente(Utilizzatore, Badge, inizioBadge)
   VALUES (p_CF, p_Badge, NOW());
 
-  -- Inserisci i contatti se presenti
+  -- inserimento contatti
   IF p_email IS NOT NULL THEN
     INSERT INTO email(email, Utilizzatore) VALUES(p_email, p_CF);
   END IF;
@@ -354,7 +363,7 @@ BEGIN
     INSERT INTO cellulare(cellulare, Utilizzatore) VALUES(p_cellulare, p_CF);
   END IF;
 
-  -- Inserisci l'iscrizione al corso
+  -- iscrizione al corso
   INSERT INTO Iscrizione(Utente, Corso)
   VALUES (p_CF, p_iscrizione);
 
@@ -364,15 +373,15 @@ END;$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure updateContattiUtilizzatore
+-- procedure aggiornaContattiUtilizzatore
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`updateContattiUtilizzatore`;
+DROP procedure IF EXISTS `mydb`.`aggiornaContattiUtilizzatore`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE updateContattiUtilizzatore(
+CREATE PROCEDURE aggiornaContattiUtilizzatore(
   IN p_CF          CHAR(16),
   IN p_email       VARCHAR(40),
   IN p_telefono    CHAR(10),
@@ -380,7 +389,14 @@ CREATE PROCEDURE updateContattiUtilizzatore(
   IN p_operazione  INT
 )
 BEGIN
-  START TRANSACTION;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
 
   -- Controllo che l'utilizzatore esista
   IF NOT EXISTS (SELECT 1 FROM Utilizzatore WHERE CF = p_CF) THEN
@@ -429,15 +445,15 @@ END;$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure updateBadgeUtente
+-- procedure aggiornamentoBadgeUtente
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`updateBadgeUtente`;
+DROP procedure IF EXISTS `mydb`.`aggiornamentoBadgeUtente`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE updateBadgeUtente(
+CREATE PROCEDURE aggiornamentoBadgeUtente(
   IN p_CF    CHAR(16),
   IN p_Badge INT UNSIGNED
 )
@@ -446,7 +462,14 @@ BEGIN
   DECLARE v_oldInizio  TIMESTAMP;
   DECLARE v_statoNewBadge ENUM('A', 'D');
 
-  START TRANSACTION;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
 
   -- Verifica lo stato del nuovo badge
   SELECT stato INTO v_statoNewBadge
@@ -454,14 +477,10 @@ BEGIN
   WHERE BadgeID = p_Badge
   FOR UPDATE;
 
-  IF v_statoNewBadge IS NULL THEN
+  IF v_statoNewBadge != 'D' THEN
     ROLLBACK;
     SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Badge specificato non esiste.';
-  ELSEIF v_statoNewBadge != 'D' THEN
-    ROLLBACK;
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Il nuovo badge non è in stato disattivato (D).';
+      SET MESSAGE_TEXT = 'Il nuovo badge appartiene a qualcun altro.';
   END IF;
 
   -- Mi salvo il badge già esistente per salvarlo nella relazione storica
@@ -470,12 +489,6 @@ BEGIN
     FROM Utente
    WHERE Utilizzatore = p_CF
    FOR UPDATE;
-
-  IF v_oldBadge IS NULL THEN
-    ROLLBACK;
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Utente non trovato: impossibile aggiornare il badge';
-  END IF;
 
   -- Salva il vecchio badge nello storico
   INSERT INTO Badge_Storico(Utente, Badge, inizio, fine)
@@ -515,102 +528,46 @@ CREATE PROCEDURE iscriviUtenteACorso(
   IN p_Corso  INT UNSIGNED
 )
 BEGIN
-  DECLARE v_existsUtente    INT DEFAULT 0;
-  DECLARE v_existsCorso     INT DEFAULT 0;
-  DECLARE v_statoCorso      ENUM('C','P','A');
-  DECLARE v_numIscritti     INT;
-  DECLARE v_capienza        INT;
-  DECLARE v_dataFine        TIMESTAMP;
-  DECLARE v_alreadySigned   INT DEFAULT 0;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+      ROLLBACK;
+      RESIGNAL;
+  END;
 
+  SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
   START TRANSACTION;
 
-  -- 1) Controlla che l'utente esista
-  SELECT COUNT(*)
-    INTO v_existsUtente
-    FROM Utente
-   WHERE Utilizzatore = p_CF;
-  IF v_existsUtente = 0 THEN
-    ROLLBACK;
+  IF EXISTS (
+    SELECT 1
+      FROM Corso
+     WHERE CorsoID = p_Corso
+       AND stato <> 'A'
+       AND data_fine > NOW()
+       AND num_iscritti < capienza
+     FOR UPDATE
+  ) THEN
+    INSERT INTO Iscrizione(Corso, Utente)
+    VALUES (p_Corso, p_CF);
+  ELSE
     SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Utente non trovato';
+      SET MESSAGE_TEXT = 'Il corso non è disponibile per nuove iscrizioni';
   END IF;
-
-  -- 2) Controlla che il corso esista e ne ricava stato, capienza e iscritti
-  SELECT COUNT(*) > 0,
-         MAX(stato),
-         MAX(num_iscritti),
-         MAX(capienza),
-         MAX(data_fine)
-    INTO v_existsCorso,
-         v_statoCorso,
-         v_numIscritti,
-         v_capienza,
-         v_dataFine
-    FROM Corso
-   WHERE CorsoID = p_Corso
-   FOR UPDATE;
-
-  IF v_existsCorso = 0 THEN
-    ROLLBACK;
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Corso non trovato';
-  END IF;
-
-  -- 3) Verifica stato e date
-  IF NOT (v_statoCorso IN ('P','A')) THEN
-    ROLLBACK;
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Corso non aperto per le iscrizioni';
-  END IF;
-  IF v_dataFine < NOW() THEN
-    ROLLBACK;
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Corso già terminato';
-  END IF;
-
-  -- 4) Controlla capienza
-  IF v_numIscritti >= v_capienza THEN
-    ROLLBACK;
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Corso completo';
-  END IF;
-
-  -- 5) Controlla che non sia già iscritto
-  SELECT COUNT(*)
-    INTO v_alreadySigned
-    FROM Iscrizione
-   WHERE Utente = p_CF
-     AND Corso  = p_Corso;
-  IF v_alreadySigned > 0 THEN
-    ROLLBACK;
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Utente già iscritto a questo corso';
-  END IF;
-
-  -- 6) Inserimento e aggiornamento contatori
-  INSERT INTO Iscrizione(Corso, Utente)
-    VALUES(p_Corso, p_CF);
-
-  UPDATE Corso
-     SET num_iscritti = num_iscritti + 1
-   WHERE CorsoID = p_Corso;
 
   COMMIT;
-END$$
+END;$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure checkAppuntamentiPerBadge
+-- procedure controlloIscrizioneACorsoInGiornata
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`checkAppuntamentiPerBadge`;
+DROP procedure IF EXISTS `mydb`.`controlloIscrizioneACorsoInGiornata`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE checkAppuntamentiPerBadge(
+CREATE PROCEDURE controlloIscrizioneACorsoInGiornata (
   IN  p_Badge         INT UNSIGNED,
   OUT p_hasAppuntamenti  BOOLEAN
 )
@@ -618,63 +575,68 @@ BEGIN
   DECLARE v_CF       CHAR(16);
   DECLARE v_count    INT DEFAULT 0;
 
-  -- 1) Trova l'utente associato al badge
-  SELECT Utilizzatore
-    INTO v_CF
-    FROM Utente
-   WHERE Badge = p_Badge
-   LIMIT 1;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
 
-  IF v_CF IS NULL THEN
-    SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Badge non valido: nessun utente trovato';
-  END IF;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    SET TRANSACTION READ ONLY;
+    START TRANSACTION;
 
-  -- 2) Conta gli appuntamenti di oggi per i corsi a cui è iscritto
-  SELECT COUNT(*)
-    INTO v_count
-    FROM Appuntamento A
-    JOIN Iscrizione   I ON A.Corso = I.Corso
-    WHERE I.Utente = v_CF
-      AND DATE(A.inizio) = CURRENT_DATE();
+  SELECT COUNT(*) INTO v_count
+  FROM Appuntamento A
+  JOIN Iscrizione I ON A.Corso = I.Corso
+  JOIN Utente U ON U.Utilizzatore = I.Utente
+  WHERE U.Badge = p_Badge
+    AND DATE(A.inizio) = CURRENT_DATE();
 
-  -- 3) Imposta il parametro OUT
-  SET p_hasAppuntamenti = (v_count > 0);
+	SET p_hasAppuntamenti = (v_count > 0);
 
+	COMMIT;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure InsertNuovoAccesso
+-- procedure registrazioneAccessoPiscina
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`InsertNuovoAccesso`;
+DROP procedure IF EXISTS `mydb`.`registrazioneAccessoPiscina`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE InsertNuovoAccesso (
+CREATE PROCEDURE registrazioneAccessoPiscina (
     IN p_BadgeID INT UNSIGNED
 )
 BEGIN
-    -- ISTRUZIONE ATOMICA, non serve transaction
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    START TRANSACTION;
     INSERT INTO Accesso (istante, Badge)
     VALUES (NOW(), p_BadgeID);
-END$$
+    COMMIT;
+END;$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure InserisciCorso
+-- procedure aggiuntaCorso
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`InserisciCorso`;
+DROP procedure IF EXISTS `mydb`.`aggiuntaCorso`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE InserisciCorso (
+CREATE PROCEDURE aggiuntaCorso (
     IN p_minimo INT UNSIGNED,
     IN p_stato ENUM('C', 'P', 'A'),
     IN p_nome VARCHAR(45),
@@ -697,15 +659,15 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure ModificaCorso
+-- procedure modificaCorso
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`ModificaCorso`;
+DROP procedure IF EXISTS `mydb`.`modificaCorso`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE ModificaCorso (
+CREATE PROCEDURE modificaCorso (
     IN p_CorsoID    INT UNSIGNED,
     IN p_minimo     INT UNSIGNED     ,
     IN p_stato      ENUM('C','P','A') ,
@@ -716,6 +678,15 @@ CREATE PROCEDURE ModificaCorso (
     IN p_capienza   INT UNSIGNED
 )
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+	-- se la capienza viene ridotta ma durante l'esecuzione della transazione vengono aggiunti iscritti superando la nuova capienza  dopo l'aggiornamento avremo la capienza inferiore al numero di iscritti, inaccettabile
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
     UPDATE Corso
     SET
         minimo      = IF(p_minimo     IS NULL, minimo,      p_minimo),
@@ -726,20 +697,22 @@ BEGIN
         data_fine   = IF(p_data_fine  IS NULL, data_fine,   p_data_fine),
         capienza    = IF(p_capienza   IS NULL, capienza,    p_capienza)
     WHERE CorsoID = p_CorsoID;
+
+    COMMIT;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure AnnullaCorso
+-- procedure annullaCorso
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`AnnullaCorso`;
+DROP procedure IF EXISTS `mydb`.`annullaCorso`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE AnnullaCorso (
+CREATE PROCEDURE annullaCorso (
     IN p_CorsoID INT UNSIGNED
 )
 BEGIN
@@ -751,43 +724,61 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure InserisciAppuntamento
+-- procedure aggiungiAppuntamento
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`InserisciAppuntamento`;
+DROP procedure IF EXISTS `mydb`.`aggiungiAppuntamento`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE InserisciAppuntamento (
+CREATE PROCEDURE aggiungiAppuntamento (
     IN p_CorsoID  INT UNSIGNED,
     IN p_Vasca    VARCHAR(10),
     IN p_inizio   TIMESTAMP,
     IN p_fine     TIMESTAMP
 )
 BEGIN
-    -- Controllo data_inizio < data_fine
-    IF p_inizio >= p_fine THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Errore: inizio deve essere precedente a fine';
-    END IF;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
 
-    INSERT INTO Appuntamento (Corso, Vasca, inizio, fine)
-    VALUES (p_CorsoID, p_Vasca, p_inizio, p_fine);
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+
+    IF EXISTS (
+        SELECT 1
+        FROM Corso C
+        WHERE C.CorsoID = p_CorsoID
+          AND p_inizio < p_fine
+          AND C.stato <> 'A'
+          AND p_inizio >= C.data_inizio
+          AND p_fine <= C.data_fine
+    ) THEN
+        INSERT INTO Appuntamento (Corso, Vasca, inizio, fine)
+        VALUES (p_CorsoID, p_Vasca, p_inizio, p_fine);
+
+        COMMIT;
+    ELSE
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Errore: dati non validi o conflitto di orario con un altro appuntamento.';
+    END IF;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure ModificaAppuntamento
+-- procedure modificaAppuntamento
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`ModificaAppuntamento`;
+DROP procedure IF EXISTS `mydb`.`modificaAppuntamento`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE ModificaAppuntamento (
+CREATE PROCEDURE modificaAppuntamento (
     IN p_CorsoID_old  INT UNSIGNED,
     IN p_inizio_old   TIMESTAMP,
     IN p_CorsoID_new  INT UNSIGNED,
@@ -796,34 +787,37 @@ CREATE PROCEDURE ModificaAppuntamento (
     IN p_fine_new     TIMESTAMP
 )
 BEGIN
-    -- Controllo data_inizio < data_fine
-    IF p_inizio_new >= p_fine_new THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Errore: inizio deve essere precedente a fine';
-    END IF;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
 
-    UPDATE Appuntamento
-    SET
-        Corso  = p_CorsoID_new,
-        Vasca  = p_Vasca_new,
-        inizio = p_inizio_new,
-        fine   = p_fine_new
-    WHERE Corso = p_CorsoID_old
-      AND inizio = p_inizio_old;
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+    START TRANSACTION;
+        UPDATE Appuntamento
+        SET
+            Corso  = p_CorsoID_new ,
+            Vasca  = IF(p_Vasca_new IS NULL, Vasca, p_Vasca_new),
+            inizio = p_inizio_new,
+            fine   = IF(p_fine_new IS NULL, fine, p_fine_new)
+        WHERE Corso = p_CorsoID_old
+          AND inizio = p_inizio_old;
+    COMMIT;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure RimuoviAppuntamento
+-- procedure eliminaAppuntamento
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`RimuoviAppuntamento`;
+DROP procedure IF EXISTS `mydb`.`eliminaAppuntamento`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE RimuoviAppuntamento (
+CREATE PROCEDURE eliminaAppuntamento (
     IN p_CorsoID  INT UNSIGNED,
     IN p_inizio   TIMESTAMP
 )
@@ -836,15 +830,15 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure InserisciAddetto
+-- procedure aggiuntaAddettoSegreteria
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`InserisciAddetto`;
+DROP procedure IF EXISTS `mydb`.`aggiuntaAddettoSegreteria`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE InserisciAddetto (
+CREATE PROCEDURE aggiuntaAddettoSegreteria (
     IN p_CF         CHAR(16),
     IN p_indirizzo  VARCHAR(60),
     IN p_nome       VARCHAR(30),
@@ -852,6 +846,9 @@ CREATE PROCEDURE InserisciAddetto (
     IN p_password   VARCHAR(32)
 )
 BEGIN
+	SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+	START TRANSACTION;
+
     -- Se non esiste il corrispondente Utilizzatore, lo creo
     IF NOT EXISTS (
         SELECT 1
@@ -865,20 +862,22 @@ BEGIN
     -- Inserisco l’Addetto
     INSERT INTO Addetto (Utilizzatore, username, password)
     VALUES (p_CF, p_username, md5(p_password));
+
+	COMMIT;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure ModificaAddetto
+-- procedure modificaAddettoSegreteria
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`ModificaAddetto`;
+DROP procedure IF EXISTS `mydb`.`modificaAddettoSegreteria`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE ModificaAddetto (
+CREATE PROCEDURE modificaAddettoSegreteria(
     IN p_CF           CHAR(16),
     IN p_nuovoUsername VARCHAR(30),
     IN p_nuovaPassword VARCHAR(32)
@@ -894,18 +893,27 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure RimuoviAddetto
+-- procedure rimuoviAddettoSegreteria
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`RimuoviAddetto`;
+DROP procedure IF EXISTS `mydb`.`rimuoviAddettoSegreteria`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE RimuoviAddetto (
+CREATE PROCEDURE rimuoviAddettoSegreteria (
     IN p_CF CHAR(16)
 )
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
+
     -- Rimuovo l’addetto
     DELETE FROM Addetto
      WHERE Utilizzatore = p_CF;
@@ -919,26 +927,39 @@ BEGIN
         DELETE FROM Utilizzatore
          WHERE CF = p_CF;
     END IF;
+
+    COMMIT;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure ReportAccessi
+-- procedure generareReportAccessi
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`ReportAccessi`;
+DROP procedure IF EXISTS `mydb`.`generareReportAccessi`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE ReportAccessi (
+CREATE PROCEDURE generareReportAccessi (
     IN  p_inizio     TIMESTAMP,
     IN  p_fine       TIMESTAMP,
     OUT p_previsti   INT,
     OUT p_effettivi  INT
 )
 BEGIN
+
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    SET TRANSACTION READ ONLY;
+    START TRANSACTION;
+
     -- Calcolo degli accessi previsti:
     -- somma di num_iscritti per ogni appuntamento con inizio nell’intervallo
     SELECT COALESCE(SUM(c.num_iscritti), 0)
@@ -954,47 +975,69 @@ BEGIN
     INTO p_effettivi
     FROM Accesso
     WHERE istante BETWEEN p_inizio AND p_fine;
+
+    COMMIT;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure VisualizzaIscrittiCorso
+-- procedure visualizzaUtentiIscrittiACorso
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`VisualizzaIscrittiCorso`;
+DROP procedure IF EXISTS `mydb`.`visualizzaUtentiIscrittiACorso`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE VisualizzaIscrittiCorso (
+CREATE PROCEDURE visualizzaUtentiIscrittiACorso (
     IN p_CorsoID INT UNSIGNED
 )
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    START TRANSACTION;
+
     SELECT
-        u.Utente    AS CF,    -- qui uso la colonna corretta
+        u.Utente    AS CF,
         ut.nome     AS Nome
     FROM Iscrizione u
     JOIN Utilizzatore ut
       ON u.Utente = ut.CF
     WHERE u.Corso = p_CorsoID;
+    COMMIT;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure VisualizzaCorsiUtente
+-- procedure visualizzaCorsiUtente
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`VisualizzaCorsiUtente`;
+DROP procedure IF EXISTS `mydb`.`visualizzaCorsiUtente`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE VisualizzaCorsiUtente (
+CREATE PROCEDURE visualizzaCorsiUtente (
     IN p_CF CHAR(16)
 )
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    SET TRANSACTION READ ONLY;
+    START TRANSACTION;
+
     SELECT
         c.CorsoID       AS CorsoID,
         c.nome          AS NomeCorso
@@ -1002,23 +1045,35 @@ BEGIN
     JOIN Corso c
       ON i.Corso = c.CorsoID
     WHERE i.Utente = p_CF;
+
+    COMMIT;
 END$$
 
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure VisualizzaAppuntamentiCorso
+-- procedure visualizzaAppuntamentiCorso
 -- -----------------------------------------------------
 
 USE `mydb`;
-DROP procedure IF EXISTS `mydb`.`VisualizzaAppuntamentiCorso`;
+DROP procedure IF EXISTS `mydb`.`visualizzaAppuntamentiCorso`;
 
 DELIMITER $$
 USE `mydb`$$
-CREATE PROCEDURE VisualizzaAppuntamentiCorso (
+CREATE PROCEDURE visualizzaAppuntamentiCorso (
     IN p_CorsoID INT UNSIGNED
 )
 BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    SET TRANSACTION READ ONLY;
+    START TRANSACTION;
+
     SELECT
         a.inizio  AS Inizio,
         a.fine    AS Fine,
@@ -1026,6 +1081,8 @@ BEGIN
     FROM Appuntamento a
     WHERE a.Corso = p_CorsoID
     ORDER BY a.inizio;
+
+    COMMIT;
 END$$
 
 DELIMITER ;
@@ -1034,15 +1091,25 @@ USE `mydb`;
 DELIMITER $$
 
 USE `mydb`$$
-DROP TRIGGER IF EXISTS `mydb`.`Corso_BEFORE_INSERT` $$
+DROP TRIGGER IF EXISTS `mydb`.`Corso_BEFORE_INSERT_date` $$
 USE `mydb`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Corso_BEFORE_INSERT` BEFORE INSERT ON `Corso` FOR EACH ROW
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Corso_BEFORE_INSERT_date` BEFORE INSERT ON `Corso` FOR EACH ROW
 BEGIN
     IF NEW.data_inizio >= NEW.data_fine THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT =
-              'Errore: la data di inizio deve essere precedente alla data di fine';
+              'Errore: la data di inizio del corso deve essere precedente alla data di fine';
     END IF;
+END;
+
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Corso_BEFORE_INSERT_capienza` BEFORE INSERT ON `Corso` FOR EACH ROW
+BEGIN
+    IF NEW.minimo >= NEW.capienza THEN
+		SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT =
+              'Errore: il numero minimo di partecipanti deve essere inferiore alla capienza del corso';
+    END IF;
+
 END$$
 
 
@@ -1056,244 +1123,81 @@ BEGIN
             SET MESSAGE_TEXT =
               'Errore: la data di inizio deve essere precedente alla data di fine';
     END IF;
-END$$
 
-
-USE `mydb`$$
-DROP TRIGGER IF EXISTS `mydb`.`Appuntamento_BEFORE_INSERT` $$
-USE `mydb`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Appuntamento_BEFORE_INSERT` BEFORE INSERT ON `Appuntamento` FOR EACH ROW
-BEGIN
-	DECLARE corso_start DATE;
-    DECLARE corso_end   DATE;
-    DECLARE corso_stato VARCHAR(20);
-
-    -- 1) Controllo inizio ≤ fine per l’appuntamento
-    IF NEW.inizio > NEW.fine THEN
-        SIGNAL SQLSTATE '45000'
+    IF NEW.minimo >= NEW.capienza THEN
+		SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT =
-              'Data non valida: inizio appuntamento maggiore della data di fine.';
+              'Errore: il numero minimo di partecipanti deve essere inferiore alla capienza del corso';
     END IF;
 
-    -- 2) Ricavo data_inizio, data_fine e stato del corso associato
-    SELECT C.data_inizio, C.data_fine, C.stato
-      INTO corso_start, corso_end, corso_stato
-      FROM Corso C
-     WHERE C.CorsoID = NEW.Corso
-     LIMIT 1;
-
-    IF corso_end IS NULL THEN
+    IF NEW.capienza <> OLD.capienza AND NEW.capienza <> NULL AND NEW.capienza < OLD.num_iscritti THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT =
-              'Inserimento Appuntamento negato: il corso specificato non esiste.';
-    END IF;
-
-    -- 3) Verifico che il corso non sia già annullato
-    IF corso_stato = 'A' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT =
-              'Inserimento Appuntamento negato: il corso risulta annullato.';
-    END IF;
-
-    -- 4) Controllo che le date di Appuntamento non superino la data di fine del corso
-    IF NEW.fine > corso_end THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT =
-              'Data non valida: data di fine appuntamento supera la data di fine del corso.';
-    END IF;
-
-    IF NEW.inizio < corso_start THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT =
-              'Data non valida: data di inizio appuntamento precedente alla data di inizio del corso.';
+              'Errore: la nuova capienza non può essere inferiore al numero di iscritti attuali';
     END IF;
 END$$
 
 
 USE `mydb`$$
-DROP TRIGGER IF EXISTS `mydb`.`Appuntamento_BEFORE_UPDATE` $$
+DROP TRIGGER IF EXISTS `mydb`.`Appuntamento_BEFORE_UPDATE_1` $$
 USE `mydb`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Appuntamento_BEFORE_UPDATE` BEFORE UPDATE ON `Appuntamento` FOR EACH ROW
+CREATE DEFINER = CURRENT_USER TRIGGER `Appuntamento_BEFORE_UPDATE_1`
+BEFORE UPDATE ON `Appuntamento` FOR EACH ROW
 BEGIN
-	DECLARE corso_start DATE;
-    DECLARE corso_end   DATE;
-    DECLARE corso_stato VARCHAR(20);
+    DECLARE v_statoCorso ENUM('C', 'P', 'A');
 
-    -- 1) Controllo inizio ≤ fine nel nuovo record
-    IF NEW.inizio > NEW.fine THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT =
-              'Data non valida: inizio appuntamento maggiore della data di fine.';
-    END IF;
+    SELECT stato
+      INTO v_statoCorso
+      FROM Corso
+     WHERE CorsoID = NEW.Corso
+     LIMIT 1
+     FOR UPDATE;
 
-    -- 2) Estrazione info corso
-    SELECT C.data_inizio, C.data_fine, C.stato
-      INTO corso_start, corso_end, corso_stato
-      FROM Corso C
-     WHERE C.CorsoID = NEW.Corso
-     LIMIT 1;
-
-    IF corso_end IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT =
-              'Aggiornamento Appuntamento negato: il corso specificato non esiste.';
-    END IF;
-
-    -- 3) Verifico che il corso non sia annullato
-    IF corso_stato = 'A' THEN
+    IF v_statoCorso = 'A' THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT =
               'Aggiornamento Appuntamento negato: il corso risulta annullato.';
     END IF;
+END;
 
-    -- 4) Controllo date rispetto al corso
-    IF NEW.fine > corso_end THEN
+CREATE DEFINER = CURRENT_USER TRIGGER `Appuntamento_BEFORE_UPDATE_2`
+BEFORE UPDATE ON `Appuntamento` FOR EACH ROW
+BEGIN
+    DECLARE v_dataInizioCorso DATE;
+    DECLARE v_dataFineCorso   DATE;
+
+    SELECT data_inizio, data_fine
+      INTO v_dataInizioCorso, v_dataFineCorso
+      FROM Corso
+     WHERE CorsoID = NEW.Corso
+     LIMIT 1;
+
+    IF DATE(NEW.inizio) < v_dataInizioCorso OR DATE(NEW.fine) > v_dataFineCorso THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT =
-              'Data non valida: data di fine appuntamento supera la data di fine del corso.';
+              'Aggiornamento Appuntamento negato: l\'appuntamento deve svolgersi durante il periodo di erogazione del corso.';
     END IF;
+END;
 
-    IF NEW.inizio < corso_start THEN
+CREATE DEFINER = CURRENT_USER TRIGGER `Appuntamento_BEFORE_UPDATE_3`
+BEFORE UPDATE ON `Appuntamento` FOR EACH ROW
+BEGIN
+    IF NEW.inizio > NEW.fine THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT =
-              'Data non valida: data di inizio appuntamento precedente alla data di inizio del corso.';
+              'Aggiornamento Appuntamento negato: orario di inizio maggiore dell\'orario di fine.';
     END IF;
-END$$
+END;$$
 
 
 USE `mydb`$$
-DROP TRIGGER IF EXISTS `mydb`.`Utente_BEFORE_INSERT` $$
+DROP TRIGGER IF EXISTS `mydb`.`Iscrizione_AFTER_INSERT` $$
 USE `mydb`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Utente_BEFORE_INSERT` BEFORE INSERT ON `Utente` FOR EACH ROW
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Iscrizione_AFTER_INSERT` AFTER INSERT ON `Iscrizione` FOR EACH ROW
 BEGIN
-	DECLARE cnt_historic INT;
-
-	-- Verifico se esiste già un record in Badge_Storico
-	-- in cui lo stesso badge è stato assegnato allo stesso utente in passato
-	SELECT COUNT(*)
-	  INTO cnt_historic
-	  FROM Badge_Storico BS
-	 WHERE BS.Badge = NEW.Badge
-	   AND BS.Utente = NEW.Utilizzatore;
-
-	IF cnt_historic > 0 THEN
-		SIGNAL SQLSTATE '45000'
-			SET MESSAGE_TEXT =
-			  'Assegnazione negata: questo utente aveva già avuto in passato lo stesso badge.';
-	END IF;
-END$$
-
-
-USE `mydb`$$
-DROP TRIGGER IF EXISTS `mydb`.`Utente_BEFORE_UPDATE` $$
-USE `mydb`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Utente_BEFORE_UPDATE` BEFORE UPDATE ON `Utente` FOR EACH ROW
-BEGIN
-	DECLARE cnt_historic_upd INT;
-
-    -- Se si sta cambiando il badge, controllo la tabella storica
-    IF NEW.Badge <> OLD.Badge THEN
-        SELECT COUNT(*)
-          INTO cnt_historic_upd
-          FROM Badge_Storico BS
-         WHERE BS.Badge = NEW.Badge
-           AND BS.Utente = NEW.Utilizzatore;
-
-        IF cnt_historic_upd > 0 THEN
-            SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT =
-                  'Assegnazione negata: questo utente aveva già avuto in passato lo stesso badge.';
-        END IF;
-    END IF;
-END$$
-
-
-USE `mydb`$$
-DROP TRIGGER IF EXISTS `mydb`.`Addetto_BEFORE_INSERT` $$
-USE `mydb`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Addetto_BEFORE_INSERT` BEFORE INSERT ON `Addetto` FOR EACH ROW
-BEGIN
-	DECLARE cnt_un INT;
-
-    -- Controllo univocità username
-    SELECT COUNT(*)
-      INTO cnt_un
-      FROM Addetto A
-     WHERE A.username = NEW.username;
-
-    IF cnt_un > 0 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT =
-              'Inserimento Addetto negato: username già esistente.';
-    END IF;
-END$$
-
-
-USE `mydb`$$
-DROP TRIGGER IF EXISTS `mydb`.`Addetto_BEFORE_UPDATE` $$
-USE `mydb`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Addetto_BEFORE_UPDATE` BEFORE UPDATE ON `Addetto` FOR EACH ROW
-BEGIN
-	DECLARE cnt_un INT;
-
-    -- Se si sta cambiando lo username, controllo che il nuovo non sia già usato
-    IF NEW.username <> OLD.username THEN
-        SELECT COUNT(*)
-          INTO cnt_un
-          FROM Addetto A
-         WHERE A.username = NEW.username;
-
-        IF cnt_un > 0 THEN
-            SIGNAL SQLSTATE '45000'
-                SET MESSAGE_TEXT =
-                  'Aggiornamento Addetto negato: username già esistente.';
-        END IF;
-    END IF;
-END$$
-
-
-USE `mydb`$$
-DROP TRIGGER IF EXISTS `mydb`.`Iscrizione_BEFORE_INSERT` $$
-USE `mydb`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`Iscrizione_BEFORE_INSERT` BEFORE INSERT ON `Iscrizione` FOR EACH ROW
-BEGIN
-	DECLARE course_end DATE;
-    DECLARE max_capienza INT;
-    DECLARE iscritti_correnti INT;
-
-    -- Controllo esistenza corso
-    SELECT C.data_fine, C.capienza
-    INTO course_end, max_capienza
-    FROM Corso C
-    WHERE C.CorsoID = NEW.Corso LIMIT 1;
-
-    IF course_end IS NULL THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
-        'Iscrizione negata: il corso specificato non esiste.';
-    END IF;
-
-    -- Controllo se la data corrente è successiva alla data di fine
-    IF CURDATE() > course_end THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
-        'Iscrizione negata: il corso è già terminato.';
-    END IF;
-
-    -- Controllo del numero massimo di iscritti
-    SELECT COUNT(*)
-    INTO iscritti_correnti
-    FROM Iscrizione I
-    WHERE I.Corso = NEW.Corso;
-
-    IF iscritti_correnti >= max_capienza THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT =
-        'Iscrizione negata: il corso ha raggiunto il numero massimo di partecipanti.';
-    END IF;
-
-    UPDATE Corso
-    SET num_iscritti = num_iscritti + 1
-	WHERE CorsoID = NEW.Corso;
-
+	UPDATE Corso
+     SET num_iscritti = num_iscritti + 1
+   WHERE CorsoID = NEW.Corso;
 END$$
 
 

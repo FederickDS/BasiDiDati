@@ -207,17 +207,17 @@ public class AddettoView {
             System.out.print("Inserisci il minimo di utenti"+ suffisso +": ");
             buffer = input.nextLine();
             if(!buffer.isEmpty()){
-                corso.setMinimo(Integer.getInteger(buffer));
+                corso.setMinimo(Integer.parseInt(buffer));
             }
             System.out.print("Inserisci la capienza"+ suffisso +": ");
             buffer = input.nextLine();
             if(!buffer.isEmpty()){
-                corso.setCapienza(Integer.getInteger(buffer));
+                corso.setCapienza(Integer.parseInt(buffer));
             }
             System.out.print("Inserisci il costo del corso" + suffisso +": ");
             buffer = input.nextLine();
             if(!buffer.isEmpty()){
-                corso.setCosto(Integer.getInteger(buffer));
+                corso.setCosto(Integer.parseInt(buffer));
             }
             System.out.print("Vuoi cambiare la data di inizio del corso (Si: premi almeno un tasto, no: premi solo invio)? ");
             buffer = input.nextLine();
@@ -273,11 +273,18 @@ public class AddettoView {
         Appuntamento appuntamento = new Appuntamento();
         String buffer;
         try {
-            System.out.print("Inserisci la vasca (non inserire niente per lasciare): ");
+            System.out.print("Inserisci la vasca (non inserire niente per lasciare vasca attuale): ");
             buffer = input.nextLine();
             if(!buffer.isEmpty()){
                 appuntamento.setVasca(buffer);
             }
+
+            System.out.println("Vuoi cambiare la data di inizio (Si: premi almeno un tasto, No: premi solo invio)?");
+            buffer = input.nextLine();
+            if (!buffer.isEmpty()) {
+                appuntamento.setInizioNew(getOrario());
+            }
+
             System.out.println("Vuoi cambiare la data di fine (Si: premi almeno un tasto, No: premi solo invio)?");
             buffer = input.nextLine();
             if(!buffer.isEmpty()){

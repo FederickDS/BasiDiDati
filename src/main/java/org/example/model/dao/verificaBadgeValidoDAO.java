@@ -12,7 +12,7 @@ public class verificaBadgeValidoDAO implements GenericProcedureDAO{
         try{
             int badge = Integer.parseInt(params[0].toString());
             Connection conn = ConnectionFactory.getConnection();
-            CallableStatement cs = conn.prepareCall("{call checkAppuntamentiPerBadge(?,?)}");
+            CallableStatement cs = conn.prepareCall("{call controlloIscrizioneACorsoInGiornata(?,?)}");
             cs.setInt(1, badge);
             cs.registerOutParameter(2, java.sql.Types.BOOLEAN);
             cs.execute();

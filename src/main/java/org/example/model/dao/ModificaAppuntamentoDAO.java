@@ -16,8 +16,17 @@ public class ModificaAppuntamentoDAO implements GenericProcedureDAO<String>{
             throw new DAOException("Numero parametri errato per InserisciCorso. Attesi: 1");
         }
         Appuntamento appuntamento = (Appuntamento) params[0];
+        System.out.println("==== DEBUG: Parametri per modificaAppuntamento ====");
+        System.out.println("CorsoID_old: " + appuntamento.getCorso());
+        System.out.println("Inizio_old: " + appuntamento.getInizio());
+        System.out.println("CorsoID_new: " + appuntamento.getCorso());
+        System.out.println("Vasca_new: " + (appuntamento.getVasca() != null ? appuntamento.getVasca() : "NULL"));
+        System.out.println("Inizio_new: " + appuntamento.getInizioNew());
+        System.out.println("Fine_new: " + (appuntamento.getFine() != null ? appuntamento.getFine() : "NULL"));
+        System.out.println("====================================================");
+
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL ModificaAppuntamento(?,?,?,?,?,?)}");
+            CallableStatement cs = conn.prepareCall("{CALL modificaAppuntamento(?,?,?,?,?,?)}");
 
             cs.setInt(1, appuntamento.getCorso());
             cs.setTimestamp(2, appuntamento.getInizio());
@@ -27,7 +36,11 @@ public class ModificaAppuntamentoDAO implements GenericProcedureDAO<String>{
             }else{
                 cs.setNull(4, Types.VARCHAR);
             }
-            cs.setTimestamp(5, appuntamento.getInizio());
+            if(appuntamento.getInizioNew() != null){
+                cs.setTimestamp(5, appuntamento.getInizioNew());
+            }else{
+                cs.setTimestamp(5, appuntamento.getInizio());
+            }
             if(appuntamento.getFine() != null){
                 cs.setTimestamp(6, appuntamento.getFine());
             }else{
@@ -36,7 +49,7 @@ public class ModificaAppuntamentoDAO implements GenericProcedureDAO<String>{
 
             cs.execute();
         } catch (SQLException e) {
-            throw new DAOException("Inserimento del corso fallito: " + e.getMessage());
+            throw new DAOException("Inserimento dell'appuntamento fallito: " + e.getMessage());
         }
 
         return "\nAppuntamento modificato con successo!\n";

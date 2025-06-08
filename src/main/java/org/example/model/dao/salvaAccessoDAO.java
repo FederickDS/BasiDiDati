@@ -13,7 +13,7 @@ public class salvaAccessoDAO implements GenericProcedureDAO{
                 int badge = Integer.parseInt(params[0].toString());
                 Connection conn = ConnectionFactory.getConnection();
                 //seconda query, per scrivere effettivamente
-                CallableStatement cs = conn.prepareCall("{call insertNuovoAccesso(?)}");
+                CallableStatement cs = conn.prepareCall("{call registrazioneAccessoPiscina(?)}");
                 cs.setInt(1, badge);
                 cs.execute();
             }catch (SQLException e){

@@ -19,12 +19,12 @@ public class VisualizzaCorsiUtenteDAO implements GenericProcedureDAO<List<Corso>
         List<Corso> corsi = new ArrayList<>();
 
         try (Connection conn = ConnectionFactory.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL VisualizzaCorsiUtente(?)}")) {
+             CallableStatement cs = conn.prepareCall("{CALL visualizzaCorsiUtente(?)}")) {
 
             cs.setString(1, CF);
 
-            int hasResult = cs.executeUpdate();
-            if (hasResult>0) {
+            boolean hasResult = cs.execute();
+            if (hasResult) {
                 try (ResultSet rs = cs.getResultSet()) {
                     while (rs.next()) {
                         Corso corso = new Corso();

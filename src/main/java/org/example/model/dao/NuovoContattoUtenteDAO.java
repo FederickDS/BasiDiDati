@@ -28,7 +28,7 @@ public class NuovoContattoUtenteDAO implements GenericProcedureDAO{
             Cellulare cellulare = cellulari.getFirst();
 
             Connection conn = ConnectionFactory.getConnection();
-            CallableStatement cs = conn.prepareCall("{ call updateContattiUtilizzatore(?, ?, ?, ?, ?) }");
+            CallableStatement cs = conn.prepareCall("{ call aggiornaContattiUtilizzatore(?, ?, ?, ?, ?) }");
 
             cs.setString(1,util.getCF());
 

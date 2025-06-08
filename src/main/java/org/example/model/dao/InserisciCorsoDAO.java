@@ -16,7 +16,7 @@ public class InserisciCorsoDAO implements GenericProcedureDAO {
         }
         Corso corso = (Corso) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL InserisciCorso(?, ?, ?, ?, ?, ?, ?)}");
+            CallableStatement cs = conn.prepareCall("{CALL aggiuntaCorso(?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setInt(1, corso.getMinimo());            // p_minimo
             cs.setString(2, String.valueOf(corso.getStato()));          // p_stato (ENUM: 'C', 'P', 'A')

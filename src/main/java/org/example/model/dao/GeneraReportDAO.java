@@ -17,7 +17,7 @@ public class GeneraReportDAO implements GenericProcedureDAO<Report> {
         }
         Report report =  (Report) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL ReportAccessi(?,?,?,?)}");
+            CallableStatement cs = conn.prepareCall("{CALL generareReportAccessi(?,?,?,?)}");
 
             cs.setTimestamp(1, report.getInizio());
             cs.setTimestamp(2, report.getFine());

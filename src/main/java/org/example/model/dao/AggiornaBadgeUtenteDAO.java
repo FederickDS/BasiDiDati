@@ -13,7 +13,7 @@ public class AggiornaBadgeUtenteDAO implements GenericProcedureDAO<String>{
         Utilizzatore utils = (Utilizzatore) params[0];
         try{
             Connection conn = ConnectionFactory.getConnection();
-            CallableStatement cs = conn.prepareCall("{call updateBadgeUtente(?,?)}");
+            CallableStatement cs = conn.prepareCall("{call aggiornamentoBadgeUtente(?,?)}");
             cs.setString(1,utils.getCF());
             cs.setInt(2,utils.getUtente().getBadge().getBadgeID());
             cs.execute();

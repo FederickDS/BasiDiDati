@@ -16,7 +16,7 @@ public class RimuoviAppuntamentoDAO implements GenericProcedureDAO<String>{
         }
         Appuntamento appuntamento = (Appuntamento) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL RimuoviAppuntamento(?,?)}");
+            CallableStatement cs = conn.prepareCall("{CALL eliminaAppuntamento(?,?)}");
 
             cs.setInt(1, appuntamento.getCorso());
             cs.setTimestamp(2, appuntamento.getInizio());

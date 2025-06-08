@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 public class Appuntamento {
     private Integer corso;
     private Timestamp inizio;
+    private Timestamp inizioNew;
     private Timestamp fine;
     private String vasca;
 
@@ -30,6 +31,14 @@ public class Appuntamento {
 
     public String getVasca() { return vasca; }
     public void setVasca(String vasca) { this.vasca = vasca; }
+
+    public Timestamp getInizioNew() {
+        return inizioNew;
+    }
+
+    public void setInizioNew(Timestamp inizioNew) {
+        this.inizioNew = inizioNew;
+    }
 
     @Override
     public String toString() {

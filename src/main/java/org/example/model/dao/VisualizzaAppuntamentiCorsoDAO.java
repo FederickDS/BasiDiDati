@@ -20,7 +20,7 @@ public class VisualizzaAppuntamentiCorsoDAO implements GenericProcedureDAO<List<
         List<Appuntamento> appuntamenti = new ArrayList<>();
 
         try (Connection conn = ConnectionFactory.getConnection();
-             CallableStatement cs = conn.prepareCall("{CALL VisualizzaAppuntamentiCorso(?)}")) {
+             CallableStatement cs = conn.prepareCall("{CALL visualizzaAppuntamentiCorso(?)}")) {
 
             cs.setInt(1, corsoID);
 

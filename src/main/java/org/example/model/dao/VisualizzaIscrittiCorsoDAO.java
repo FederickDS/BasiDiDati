@@ -17,7 +17,7 @@ public class VisualizzaIscrittiCorsoDAO implements GenericProcedureDAO<List<Iscr
         int corsoId = (Integer) params[0];
         List<IscrittoCorso> iscritti = new ArrayList<>();
 
-        String call = "{CALL VisualizzaIscrittiCorso(?)}";
+        String call = "{CALL visualizzaUtentiIscrittiACorso(?)}";
         try (Connection conn = ConnectionFactory.getConnection();
              CallableStatement cs = conn.prepareCall(call)) {
 

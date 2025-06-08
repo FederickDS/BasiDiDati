@@ -16,7 +16,7 @@ public class InserisciAppuntamentoDAO implements GenericProcedureDAO<String>{
         }
         Appuntamento appuntamento = (Appuntamento) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL InserisciAppuntamento(?,?,?,?)}");
+            CallableStatement cs = conn.prepareCall("{CALL aggiungiAppuntamento(?,?,?,?)}");
 
             cs.setInt(1, appuntamento.getCorso());
             cs.setString(2, appuntamento.getVasca());

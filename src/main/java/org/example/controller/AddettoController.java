@@ -184,6 +184,7 @@ public class AddettoController implements Controller {
         Appuntamento appuntamentoChoice = AddettoView.getAppuntamentoChoice();
         appuntamento.setFine(appuntamentoChoice.getFine());
         appuntamento.setVasca(appuntamentoChoice.getVasca());
+        appuntamento.setInizioNew(appuntamentoChoice.getInizioNew());
         ModificaAppuntamentoDAO dao = new ModificaAppuntamentoDAO();
         try {
             AddettoView.print(dao.execute(appuntamento));

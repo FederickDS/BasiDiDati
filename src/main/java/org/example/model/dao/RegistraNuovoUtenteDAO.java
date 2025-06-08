@@ -33,7 +33,7 @@ public class RegistraNuovoUtenteDAO implements GenericProcedureDAO {
 
             // 3) Preparazione della chiamata
             Connection conn = ConnectionFactory.getConnection();
-            CallableStatement cs = conn.prepareCall("{ call nuovoUtente(?, ?, ?, ?, ?, ?, ?, ?) }");
+            CallableStatement cs = conn.prepareCall("{ call registrazioneNuovoUtente(?, ?, ?, ?, ?, ?, ?, ?) }");
 
             // Parametri IN della procedura
             cs.setString(1, util.getCF());

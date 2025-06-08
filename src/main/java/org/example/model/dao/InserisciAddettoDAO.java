@@ -17,7 +17,7 @@ public class InserisciAddettoDAO implements GenericProcedureDAO<String>{
         }
         Utilizzatore util = (Utilizzatore) params[0];
         try (Connection conn = ConnectionFactory.getConnection()) {
-            CallableStatement cs = conn.prepareCall("{CALL InserisciAddetto(?,?,?,?,?)}");
+            CallableStatement cs = conn.prepareCall("{CALL aggiuntaAddettoSegreteria(?,?,?,?,?)}");
 
             cs.setString(1, util.getCF());
             cs.setString(2, util.getIndirizzo());
