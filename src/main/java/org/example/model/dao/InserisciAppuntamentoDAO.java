@@ -7,6 +7,8 @@ import org.example.model.domain.Corso;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 public class InserisciAppuntamentoDAO implements GenericProcedureDAO<String>{
     @Override
@@ -15,6 +17,16 @@ public class InserisciAppuntamentoDAO implements GenericProcedureDAO<String>{
             throw new DAOException("Numero parametri errato per InserisciCorso. Attesi: 1");
         }
         Appuntamento appuntamento = (Appuntamento) params[0];
+        Timestamp original = appuntamento.getInizio();
+        LocalDateTime truncated = original.toLocalDateTime()
+                .withSecond(0)
+                .withNano(0);
+        appuntamento.setInizio(Timestamp.valueOf(truncated));
+        original = appuntamento.getFine();
+        truncated = original.toLocalDateTime()
+                .withSecond(0)
+                .withNano(0);
+        appuntamento.setFine(Timestamp.valueOf(truncated));
         try (Connection conn = ConnectionFactory.getConnection()) {
             CallableStatement cs = conn.prepareCall("{CALL aggiungiAppuntamento(?,?,?,?)}");
 

@@ -4,10 +4,8 @@ import org.example.exception.DAOException;
 import org.example.model.domain.Appuntamento;
 import org.example.model.domain.Corso;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
+import java.time.LocalDateTime;
 
 public class ModificaAppuntamentoDAO implements GenericProcedureDAO<String>{
     @Override
@@ -24,7 +22,29 @@ public class ModificaAppuntamentoDAO implements GenericProcedureDAO<String>{
         System.out.println("Inizio_new: " + appuntamento.getInizioNew());
         System.out.println("Fine_new: " + (appuntamento.getFine() != null ? appuntamento.getFine() : "NULL"));
         System.out.println("====================================================");
-
+        Timestamp original;
+        LocalDateTime truncated;
+        if(appuntamento.getInizio()!=null){
+            original = appuntamento.getInizio();
+            truncated = original.toLocalDateTime()
+                    .withSecond(0)
+                    .withNano(0);
+            appuntamento.setInizio(Timestamp.valueOf(truncated));
+        }
+        if(appuntamento.getFine()!=null){
+            original = appuntamento.getFine();
+            truncated = original.toLocalDateTime()
+                    .withSecond(0)
+                    .withNano(0);
+            appuntamento.setFine(Timestamp.valueOf(truncated));
+        }
+        if(appuntamento.getInizioNew()!=null){
+            original = appuntamento.getInizioNew();
+            truncated = original.toLocalDateTime()
+                    .withSecond(0)
+                    .withNano(0);
+            appuntamento.setInizioNew(Timestamp.valueOf(truncated));
+        }
         try (Connection conn = ConnectionFactory.getConnection()) {
             CallableStatement cs = conn.prepareCall("{CALL modificaAppuntamento(?,?,?,?,?,?)}");
 

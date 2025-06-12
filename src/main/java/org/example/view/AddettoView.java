@@ -224,7 +224,7 @@ public class AddettoView {
             if(!buffer.isEmpty()){
                 corso.setDataInizio(getGiorno());
             }
-            System.out.print("Vuoi cambiare la data di inizio del corso (Si: premi almeno un tasto, no: premi solo invio)? ");
+            System.out.print("Vuoi cambiare la data di fine del corso (Si: premi almeno un tasto, no: premi solo invio)? ");
             buffer = input.nextLine();
             if(!buffer.isEmpty()){
                 corso.setDataFine(getGiorno());
