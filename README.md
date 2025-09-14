@@ -19,8 +19,7 @@ git clone https://github.com/FederickDS/BasiDiDati.git
 2. Carica su MySQL lo script presente nel codice sorgente:
 
 ```bash
-cd BasiDiDati
-mysql -u root -p < ./lastVer.sql
+mysql -u root -p < ./BasiDiDati/lastVer.sql
 ```
 
 > (l’opzione -p è necessaria se l’utente root ha una password, cosa molto probabile).
