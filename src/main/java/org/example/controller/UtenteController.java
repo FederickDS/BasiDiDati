@@ -2,11 +2,9 @@ package org.example.controller;
 
 import org.example.exception.DAOException;
 import org.example.model.dao.GenericProcedureDAO;
-import org.example.model.dao.BookingListProcedureDAO;
 import org.example.model.dao.ConnectionFactory;
 import org.example.model.dao.salvaAccessoDAO;
 import org.example.model.dao.verificaBadgeValidoDAO;
-import org.example.model.domain.BookingList;
 import org.example.model.domain.Role;
 import org.example.view.UtenteView;
 

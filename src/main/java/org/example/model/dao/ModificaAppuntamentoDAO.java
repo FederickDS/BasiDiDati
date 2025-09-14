@@ -14,14 +14,6 @@ public class ModificaAppuntamentoDAO implements GenericProcedureDAO<String>{
             throw new DAOException("Numero parametri errato per InserisciCorso. Attesi: 1");
         }
         Appuntamento appuntamento = (Appuntamento) params[0];
-        System.out.println("==== DEBUG: Parametri per modificaAppuntamento ====");
-        System.out.println("CorsoID_old: " + appuntamento.getCorso());
-        System.out.println("Inizio_old: " + appuntamento.getInizio());
-        System.out.println("CorsoID_new: " + appuntamento.getCorso());
-        System.out.println("Vasca_new: " + (appuntamento.getVasca() != null ? appuntamento.getVasca() : "NULL"));
-        System.out.println("Inizio_new: " + appuntamento.getInizioNew());
-        System.out.println("Fine_new: " + (appuntamento.getFine() != null ? appuntamento.getFine() : "NULL"));
-        System.out.println("====================================================");
         Timestamp original;
         LocalDateTime truncated;
         if(appuntamento.getInizio()!=null){
@@ -69,7 +61,7 @@ public class ModificaAppuntamentoDAO implements GenericProcedureDAO<String>{
 
             cs.execute();
         } catch (SQLException e) {
-            throw new DAOException("Inserimento dell'appuntamento fallito: " + e.getMessage());
+            throw new DAOException("Modifica dell'appuntamento fallita: " + e.getMessage());
         }
 
         return "\nAppuntamento modificato con successo!\n";

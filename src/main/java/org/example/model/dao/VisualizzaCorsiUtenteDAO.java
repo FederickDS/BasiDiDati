@@ -35,7 +35,7 @@ public class VisualizzaCorsiUtenteDAO implements GenericProcedureDAO<List<Corso>
                 }
             }
         } catch (SQLException e) {
-            throw new DAOException("Errore in VisualizzaIscrittiCorso: " + e.getMessage(), e);
+            throw new DAOException("Errore in nel recupero dei corsi dell'utente: " + e.getMessage(), e);
         }
 
         return corsi;

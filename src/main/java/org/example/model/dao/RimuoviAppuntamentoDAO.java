@@ -30,7 +30,7 @@ public class RimuoviAppuntamentoDAO implements GenericProcedureDAO<String>{
 
             cs.execute();
         } catch (SQLException e) {
-            throw new DAOException("Inserimento del corso fallito: " + e.getMessage());
+            throw new DAOException("Rimozione dell'appuntamento fallita: " + e.getMessage());
         }
 
         return "\nAppuntamento rimosso con successo!\n";

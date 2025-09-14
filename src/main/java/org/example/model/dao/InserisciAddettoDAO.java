@@ -27,7 +27,7 @@ public class InserisciAddettoDAO implements GenericProcedureDAO<String>{
 
             cs.execute();
         } catch (SQLException e) {
-            throw new DAOException("Inserimento del corso fallito: " + e.getMessage());
+            throw new DAOException("Inserimento del nuovo addetto fallito: " + e.getMessage());
         }
 
         return "\nAddetto inserito con successo!\n";

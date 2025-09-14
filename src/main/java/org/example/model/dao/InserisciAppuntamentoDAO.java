@@ -37,7 +37,7 @@ public class InserisciAppuntamentoDAO implements GenericProcedureDAO<String>{
 
             cs.execute();
         } catch (SQLException e) {
-            throw new DAOException("Inserimento del corso fallito: " + e.getMessage());
+            throw new DAOException("Inserimento dell'appuntamento fallito: " + e.getMessage());
         }
 
         return "\nAppuntamento inserito con successo!\n";

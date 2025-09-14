@@ -38,7 +38,7 @@ public class VisualizzaAppuntamentiCorsoDAO implements GenericProcedureDAO<List<
                 }
             }
         } catch (SQLException e) {
-            throw new DAOException("Errore in VisualizzaIscrittiCorso: " + e.getMessage(), e);
+            throw new DAOException("Errore in recupero informazioni appuntamenti: " + e.getMessage(), e);
         }
 
         return appuntamenti;

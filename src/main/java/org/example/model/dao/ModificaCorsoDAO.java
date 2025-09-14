@@ -17,17 +17,6 @@ public class ModificaCorsoDAO implements GenericProcedureDAO {
         }
         Corso corso = (Corso) params[0];
 
-        System.out.printf(
-                "ID: %d, Minimo: %s, Stato: %s, Nome: %s, Costo: %s, Inizio: %s, Fine: %s, Capienza: %s\n",
-                corso.getCorsoID(),
-                corso.getMinimo(),
-                corso.getStato(),
-                corso.getNome(),
-                corso.getCosto(),
-                corso.getDataInizio(),
-                corso.getDataFine(),
-                corso.getCapienza()
-        );
 
         try (Connection conn = ConnectionFactory.getConnection();
              CallableStatement cs = conn.prepareCall("{CALL modificaCorso(?, ?, ?, ?, ?, ?, ?, ?)}")) {
