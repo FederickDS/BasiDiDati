@@ -6,7 +6,7 @@ Il progetto riguarda la gestione delle iscrizioni e dei corsi in una piscina. Lâ
 
 * *DBMS*: MySQL
 * *Build system*: Maven
-* *Versione di Java*: 17 (o quella effettivamente usata, da specificare)
+* *Versione di Java*: 24
 
 ## Installazione
 
